@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const Book = require('./models/Book');
 
-
 // Ana sayfa rotası
 router.get('/', (req, res) => {
     res.send('Anasayfaya hoş geldiniz!');
