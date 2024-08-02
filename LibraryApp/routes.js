@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Book = require('./models/Book');
-
+const { body, validationResult } = require('express-validator');
 
 // Ana sayfa rotası
 router.get('/', (req, res) => {
@@ -10,14 +10,23 @@ router.get('/', (req, res) => {
 
 
 // Kitap Oluşturma
-router.post('/books', async (req, res) => {
+router.post('/books', [
+    body('title').isString().withMessage('Başlık bir metin olmalıdır').notEmpty().withMessage('Başlık boş olamaz'),
+    body('author').isString().withMessage('Yazar bir metin olmalıdır').notEmpty().withMessage('Yazar boş olamaz'),
+    body('publishedDate').isISO8601().withMessage('Geçerli bir tarih girin'),
+    body('genre').optional().isString().withMessage('Tür geçerli bir metin olmalıdır')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const book = new Book(req.body);
         await book.save();
         res.status(201).json(book);
     } catch (error) {
         console.error('Kitap oluşturma hatası:', error);
-        res.status(400).json({ error: 'Kitap oluşturma hatası' }); // TODO: Kodlar ve error objesi
+        res.status(400).json({ error: 'Kitap oluşturma hatası' });
     }
 });
 
@@ -47,7 +56,16 @@ router.get('/books/:id', async (req, res) => {
 });
 
 // Kitap Güncelleme
-router.put('/books/:id', async (req, res) => {
+router.put('/books/:id', [
+    body('title').optional().isString().withMessage('Başlık bir metin olmalıdır'),
+    body('author').optional().isString().withMessage('Yazar bir metin olmalıdır'),
+    body('publishedDate').optional().isISO8601().withMessage('Geçerli bir tarih girin'),
+    body('genre').optional().isString().withMessage('Tür geçerli bir metin olmalıdır')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
     try {
         const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
         if (!book) {
