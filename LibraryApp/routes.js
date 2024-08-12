@@ -13,7 +13,7 @@ router.get('/', (req, res) => {
 router.post('/books', [
     body('title').isString().withMessage('Başlık bir metin olmalıdır').notEmpty().withMessage('Başlık boş olamaz'),
     body('author').isString().withMessage('Yazar bir metin olmalıdır').notEmpty().withMessage('Yazar boş olamaz'),
-    body('publishedDate').isISO8601().withMessage('Geçerli bir tarih girin'),
+    body('publishedDate').optional().isISO8601().withMessage('Geçerli bir tarih girin'),
     body('genre').optional().isString().withMessage('Tür geçerli bir metin olmalıdır')
 ], async (req, res) => {
     const errors = validationResult(req);
@@ -26,7 +26,7 @@ router.post('/books', [
         res.status(201).json(book);
     } catch (error) {
         console.error('Kitap oluşturma hatası:', error);
-        res.status(400).json({ error: 'Kitap oluşturma hatası' });
+        res.status(400).json({ error });
     }
 });
 

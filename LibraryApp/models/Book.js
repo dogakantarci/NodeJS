@@ -1,28 +1,36 @@
 const mongoose = require('mongoose');
+const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+const timezone = require('dayjs/plugin/timezone');
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+// Kullanıcının saat dilimini çekiyoruz
+const userTimeZone = dayjs.tz.guess();
+
+// Zaman dilimini UTC'ye göre dönüştür
+function convertUTCToLocal(date) {
+    return dayjs(date).tz(userTimeZone).format();  // Kullanıcının saat dilimine çevirir
+}
 
 const bookSchema = new mongoose.Schema({
-    title: { type: String, required: true },
+    title: { type: String, required: true, unique: true },
     author: { type: String, required: true },
-    publishedDate: { type: Date, required: true },
+    publishedDate: { type: Date },
     genre: { type: String }
 }, {
     timestamps: true,
     toJSON: { getters: true }
 });
 
-// UTC+3 dönüşüm fonksiyonu
-function convertUTCToLocal(date) {
-    const offset = 3 * 60 * 60 * 1000; // UTC+3 için saat farkı
-    return new Date(date.getTime() + offset);
-}
-
 // Getter fonksiyonları
 bookSchema.path('createdAt').get(function(date) {
-    return convertUTCToLocal(date).toISOString();
+    return convertUTCToLocal(date);
 });
 
 bookSchema.path('updatedAt').get(function(date) {
-    return convertUTCToLocal(date).toISOString();
+    return convertUTCToLocal(date);
 });
 
 const Book = mongoose.model('Book', bookSchema);
