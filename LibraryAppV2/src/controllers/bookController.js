@@ -1,4 +1,3 @@
-// src/controllers/bookController.js
 const Book = require('../models/Book');
 
 // Kitapları alma
@@ -7,7 +6,8 @@ exports.getAllBooks = async (req, res) => {
         const books = await Book.find();
         res.status(200).json(books);
     } catch (error) {
-        res.status(500).json({ message: 'Kitapları alma hatası' });
+        console.error(error); // Hata detaylarını konsola yazdırın
+        res.status(500).json({ message: 'Kitapları alma hatası', error: error.message });
     }
 };
 
@@ -20,7 +20,8 @@ exports.getBookById = async (req, res) => {
         }
         res.status(200).json(book);
     } catch (error) {
-        res.status(500).json({ message: 'Kitap alma hatası' });
+        console.error(error);
+        res.status(500).json({ message: 'Kitap alma hatası', error: error.message });
     }
 };
 
@@ -31,7 +32,8 @@ exports.createBook = async (req, res) => {
         await book.save();
         res.status(201).json(book);
     } catch (error) {
-        res.status(400).json({ message: 'Kitap oluşturma hatası' });
+        console.error(error);
+        res.status(400).json({ message: 'Kitap oluşturma hatası', error: error.message });
     }
 };
 
@@ -44,7 +46,8 @@ exports.updateBook = async (req, res) => {
         }
         res.status(200).json(book);
     } catch (error) {
-        res.status(400).json({ message: 'Kitap güncelleme hatası' });
+        console.error(error);
+        res.status(400).json({ message: 'Kitap güncelleme hatası', error: error.message });
     }
 };
 
@@ -57,6 +60,7 @@ exports.deleteBook = async (req, res) => {
         }
         res.status(200).json({ message: 'Kitap silindi' });
     } catch (error) {
-        res.status(500).json({ message: 'Kitap silme hatası' });
+        console.error(error);
+        res.status(500).json({ message: 'Kitap silme hatası', error: error.message });
     }
 };
