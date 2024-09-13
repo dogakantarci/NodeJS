@@ -47,7 +47,13 @@ exports.updateBook = async (req, res) => {
         res.status(200).json(book);
     } catch (error) {
         console.error(error);
-        res.status(400).json({ message: 'Kitap güncelleme hatası', error: error.message });
+        
+        // Hata MongoDB veya doğrulama hatası ise 400, aksi takdirde 500 döndür
+        if (error.name === 'ValidationError' || error.name === 'CastError') {
+            res.status(400).json({ message: 'Geçersiz veri formatı', error: error.message });
+        } else {
+            res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+        }
     }
 };
 
@@ -58,7 +64,7 @@ exports.deleteBook = async (req, res) => {
         if (!book) {
             return res.status(404).json({ message: 'Kitap bulunamadı' });
         }
-        res.status(200).json({ message: 'Kitap silindi' });
+        res.status(204).json({ message: 'Kitap silindi' });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Kitap silme hatası', error: error.message });
