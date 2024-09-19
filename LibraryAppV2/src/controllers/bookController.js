@@ -113,13 +113,18 @@ exports.updateBook = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
+<<<<<<< HEAD
 
+=======
+        
+>>>>>>> 6e8dc84368b64cba54e6c2dbc238d186907a935e
         // Hata MongoDB veya doğrulama hatası ise 400, aksi takdirde 500 döndür
         if (error.name === 'ValidationError' || error.name === 'CastError') {
             res.status(400).json({ message: 'Geçersiz veri formatı', error: error.message });
         } else {
             res.status(500).json({ message: 'Sunucu hatası', error: error.message });
         }
+<<<<<<< HEAD
 
         // Hata loglama
         await addLog({
@@ -128,6 +133,8 @@ exports.updateBook = async (req, res) => {
             level: 'error',
             timestamp: new Date().toISOString()
         });
+=======
+>>>>>>> 6e8dc84368b64cba54e6c2dbc238d186907a935e
     }
 };
 
