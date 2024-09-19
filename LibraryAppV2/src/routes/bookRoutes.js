@@ -5,6 +5,7 @@ const router = express.Router();
 const bookController = require('../controllers/bookController');
 const { protect } = require('../middleware/authMiddleware');
 const { validateBook } = require('../middleware/validationMiddleware');
+const { searchBooks } = require('../services/elasticsearchService'); // Elasticsearch servisini içe aktar
 
 // Kitapları alma
 router.get('/', bookController.getAllBooks);
@@ -20,5 +21,8 @@ router.put('/:id', protect, validateBook, bookController.updateBook);
 
 // Kitap silme 
 router.delete('/:id', protect, bookController.deleteBook);
+
+// Kitap arama
+router.get('/search', bookController.searchBooks);
 
 module.exports = router;

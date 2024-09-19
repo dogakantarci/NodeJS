@@ -1,15 +1,24 @@
+//app
 const express = require('express');
+const morgan = require('morgan');  // Morgan'ı içe aktar
 const connectDB = require('./config/db');
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
+const searchRoutes = require('./routes/searchRoutes');
 
-// Veritabanına bağlan
-connectDB();
 
 const app = express();
 
+connectDB(); // Veritabanına bağlan
+
+app.use(morgan('combined'));  // 'combined' formatında loglama yapar
+
+
 // Middleware
 app.use(express.json());  // Express'in yerleşik JSON middleware'i
+
+// Elasticsearch dizinini oluştur
+//createIndex();
 
 // Anasayfa rotası
 app.get('/', (req, res) => {
@@ -17,6 +26,7 @@ app.get('/', (req, res) => {
 });
 
 // Rotaları tanımla
+app.use('/search', searchRoutes);  // Arama rotasını tanımlayın
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
 
