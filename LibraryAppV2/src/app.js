@@ -5,6 +5,7 @@ const connectDB = require('./config/db');
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 const searchRoutes = require('./routes/searchRoutes');
+const helmet = require('helmet');
 
 
 const app = express();
@@ -13,6 +14,8 @@ connectDB(); // Veritabanına bağlan
 
 app.use(morgan('combined'));  // 'combined' formatında loglama yapar
 
+// Helmet middleware'ini ekle
+app.use(helmet());
 
 // Middleware
 app.use(express.json());  // Express'in yerleşik JSON middleware'i
