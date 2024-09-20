@@ -1,4 +1,4 @@
-//elasticsearchService.js
+// elasticsearchService.js
 require('dotenv').config(); // Ortam değişkenlerini yükler
 const { Client } = require('@elastic/elasticsearch');
 
@@ -16,7 +16,7 @@ const client = new Client({
 
 // Elasticsearch dizinini kontrol eden ve oluşturan fonksiyon
 async function createIndex() {
-    const indexName = 'logs';
+    const indexName = 'books'; // İndeks adı burada 'books' olarak değiştirildi
 
     try {
         const exists = await client.indices.exists({ index: indexName });
@@ -30,32 +30,17 @@ async function createIndex() {
             body: {
                 mappings: {
                     properties: {
-                        timestamp: {
-                            type: 'date', // Log kaydı için zaman damgası
-                        },
-                        level: {
-                            type: 'keyword', // Log seviyesini (info, error, vs.) belirtir
-                        },
-                        message: {
-                            type: 'text', // Log mesajı
-                        },
-                        service: {
-                            type: 'keyword', // Log kaydını oluşturan servisi belirtir
-                        },
-                        context: {
-                            type: 'object', // Log kaydının bağlam bilgileri
-                        }
+                        title: { type: 'text' }, // Başlık için
+                        author: { type: 'keyword' } // Yazar için
                     }
                 }
             }
         });
         console.log(`Dizin oluşturuldu: ${indexName}`);
     } catch (error) {
-        console.error('Dizin oluşturma hatası:', error);
+        console.error('Dizin oluşturma hatası:', error.message, error.stack);
     }
 }
-
-
 
 // Doküman ekleme fonksiyonu
 async function addDocument(id, body) {
@@ -118,7 +103,6 @@ async function deleteDocument(id) {
     }
 }
 
-
 // Log ekleme fonksiyonu
 async function addLog(logBody) {
     try {
@@ -131,4 +115,16 @@ async function addLog(logBody) {
         console.error('Log ekleme hatası:', error.message, error.stack);
     }
 }
+
+// Modülleri dışa aktar
 module.exports = { addLog, createIndex, addDocument, search, updateDocument, deleteDocument };
+
+// Ana fonksiyon
+const main = async () => {
+    await createIndex(); // İndeksi oluştur
+    await addDocument('1', { title: 'Kitap Başlığı', author: 'Yazar Adı' }); // Örnek doküman ekle
+    const results = await search('Kitap Başlığı'); // Arama yap
+    console.log(results); // Arama sonuçlarını yazdır
+};
+
+main().catch(console.error); // Hataları yakala

@@ -17,7 +17,7 @@ function convertUTCToLocal(date) {
 }
 
 const bookSchema = new mongoose.Schema({
-    title: { type: String, required: true, unique: true },
+    title: { type: String, required: true}, //unique etiketi geçici olarak kaldırıldı
     author: { type: String, required: true },
     publishedDate: { type: Date },
     genre: { type: String }
