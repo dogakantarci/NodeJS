@@ -1,6 +1,7 @@
 const BookService = require('../services/bookService');
 const { addLog } = require('../services/elasticsearchService');
 const mongoose = require('mongoose');
+const { search } = require('../services/elasticsearchService'); // Doğru bir şekilde içe aktarılmalı
 
 exports.getAllBooks = async (req, res) => {
     try {
@@ -147,8 +148,14 @@ exports.deleteBook = async (req, res) => {
 
 // Arama işlemi için
 exports.searchBooks = async (req, res) => {
+    const query = req.query.q; // Arama sorgusunu almak için
+
+    // Arama sorgusunun geçerliliğini kontrol et
+    if (!query) {
+        return res.status(400).json({ message: 'Arama sorgusu gereklidir' });
+    }
+
     try {
-        const query = req.query.q; // Arama sorgusunu almak için
         const results = await search(query);
         res.status(200).json(results);
 
