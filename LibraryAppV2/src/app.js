@@ -20,9 +20,6 @@ app.use(helmet());
 // Middleware
 app.use(express.json());  // Express'in yerleşik JSON middleware'i
 
-// Elasticsearch dizinini oluştur
-//createIndex();
-
 // Anasayfa rotası
 app.get('/', (req, res) => {
     res.send('Anasayfaya hoş geldiniz!');

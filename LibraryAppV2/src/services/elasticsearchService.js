@@ -16,13 +16,14 @@ const client = new Client({
 
 // Elasticsearch dizinini kontrol eden ve oluşturan fonksiyon
 async function createIndex() {
-    const indexName = 'books'; // İndeks adı burada 'books' olarak değiştirildi
+    const indexName = 'books';
 
     try {
         const exists = await client.indices.exists({ index: indexName });
-        if (exists.body) {
+        // `exists` boolean değeri döner, bu yüzden burada bir kontrol yapmalısınız
+        if (exists) {
             console.log(`Dizin zaten mevcut: ${indexName}`);
-            return;
+            return; // Eğer dizin mevcutsa, fonksiyondan çık
         }
 
         await client.indices.create({
@@ -30,8 +31,8 @@ async function createIndex() {
             body: {
                 mappings: {
                     properties: {
-                        title: { type: 'text' }, // Başlık için
-                        author: { type: 'keyword' } // Yazar için
+                        title: { type: 'text' },
+                        author: { type: 'keyword' }
                     }
                 }
             }
@@ -39,6 +40,7 @@ async function createIndex() {
         console.log(`Dizin oluşturuldu: ${indexName}`);
     } catch (error) {
         console.error('Dizin oluşturma hatası:', error.message, error.stack);
+        console.error('Hata ayrıntıları:', error);
     }
 }
 
@@ -67,6 +69,12 @@ async function search(query) {
                 }
             }
         });
+
+        // Result kontrolü ekleyin
+        if (!result.body || !result.body.hits) {
+            console.error('Arama sonucu boş döndü');
+            return [];
+        }
         return result.body.hits.hits;
     } catch (error) {
         console.error('Arama hatası:', error.message, error.stack);

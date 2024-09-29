@@ -12,12 +12,14 @@ const userTimeZone = dayjs.tz.guess();
 
 // Zaman dilimini UTC'ye göre dönüştür
 function convertUTCToLocal(date) {
+    // Eğer date tanımlı değilse null döndür
+    if (!date) return null;
     return dayjs(date).tz(userTimeZone).format();  
 // Kullanıcının saat dilimine çevirir
 }
 
 const bookSchema = new mongoose.Schema({
-    title: { type: String, required: true}, //unique etiketi geçici olarak kaldırıldı
+    title: { type: String, required: true, unique: true}, 
     author: { type: String, required: true },
     publishedDate: { type: Date },
     genre: { type: String }

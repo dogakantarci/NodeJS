@@ -1,27 +1,49 @@
 // src/middleware/validationMiddleware.js
+const Ajv = require('ajv');
+const ajvFormats = require('ajv-formats');
+const bookSchema = require('../schemas/bookSchema.json');
+const { addLog } = require('../services/elasticsearchService');
 
-const { body, validationResult } = require('express-validator');
+// AJV örneği oluşturma
+const ajv = new Ajv({ allErrors: true }); //
+ajvFormats(ajv);  // Tarih ve diğer formatlar için `ajv-formats` ekliyoruz
 
-// Kitap doğrulama middleware'i
-exports.validateBook = [
-  body('title')
-    .isString().withMessage('Başlık bir metin olmalıdır.')
-    .notEmpty().withMessage('Başlık boş olamaz.'),
+// AJV doğrulama middleware'i
+const validateBook = async (req, res, next) => {
+  console.log('Gelen istek gövdesi:', req.body); // İstek gövdesini konsola yazdır
+  const validate = ajv.compile(bookSchema);
+  const valid = validate(req.body);
 
-  body('author')
-    .isString().withMessage('Yazar adı bir metin olmalıdır.')
-    .notEmpty().withMessage('Yazar adı boş olamaz.'),
+  if (!valid) {
+    console.log('Doğrulama hataları:', validate.errors); // Hataları konsola yazdır
+    const formattedErrors = validate.errors.map(error => {
+      let field = error.instancePath.substring(1) || "Bilinmeyen alan"; // /author olarak döndürdüğünden ilk karakteri çıkarıyoruz
+      if (error.keyword === 'required') {
+        field = error.params.missingProperty;
+      } else if (error.keyword === 'additionalProperties') {
+        field = "Bilinmeyen alan";
+      }
+      return {
+        field: field,
+        message: error.message
+      };
+    });
 
-  body('year')
-    .isInt({ min: 1900, max: new Date().getFullYear() }).withMessage('Yıl geçerli bir yıl olmalıdır.')
-    .optional(), // Bu alan isteğe bağlıdır, fakat varsa geçerli olmalıdır
+    await addLog({
+      level: 'error',
+      message: 'Doğrulama hatası',
+      errors: formattedErrors,
+      requestBody: req.body,
+    });
 
-  // Hataları kontrol et
-  (req, res, next) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-    next();
+    return res.status(400).json({ 
+      errors: formattedErrors, 
+      message: 'Doğrulama hataları mevcut.' 
+    });
   }
-];
+
+  next();
+};
+
+
+module.exports = { validateBook };

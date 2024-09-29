@@ -59,8 +59,8 @@ exports.getBookById = async (req, res) => {
 };
 
 exports.createBook = async (req, res) => {
-    const { title, author, publishedDate } = req.body;
-    if (!title || !author || !publishedDate) {
+    const { title, author } = req.body;
+    if (!title || !author) {
         return res.status(400).json({ message: 'Tüm alanlar gereklidir: title, author, publishedDate' });
     }
 

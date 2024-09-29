@@ -7,6 +7,15 @@ require('dotenv').config(); // Çevre değişkenlerini yükler.
 
 let token; // Token değişkeni, geçerli kullanıcı için oluşturulacak.
 
+// Elasticsearch servisini mockla
+jest.mock('../src/services/elasticsearchService', () => ({
+    addLog: jest.fn(), // addLog fonksiyonunu taklit et.
+    addDocument: jest.fn(), // addDocument fonksiyonunu taklit et.
+    searchBooks: jest.fn(), // searchBooks fonksiyonunu taklit et.
+}));
+
+const elasticsearchService = require('../src/services/elasticsearchService'); // Mocklanan elasticsearchService'i import et
+
 beforeAll(async () => {
     // Testler başlamadan önce bir JWT token oluştur.
     token = jwt.sign({ id: '66ec79b799ce4b5dc9a1b10e' }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -20,12 +29,7 @@ beforeEach(async () => {
     await Book.deleteMany({}); // Test verisi olarak daha önce eklenmiş kitapları siler.
 });
 
-// elasticsearchService modülünü mock'layarak (taklit ederek) gerçek dışı bir işlev oluşturuyoruz.
-jest.mock('../src/services/elasticsearchService', () => ({
-    addLog: jest.fn(), // addLog fonksiyonunu taklit et.
-    addDocument: jest.fn(), // addDocument fonksiyonunu taklit et.
-}));
-
+// Kitap Controller Testleri
 describe('Book Controller Tests', () => {
     // Tüm kitapları getiren '/books' endpoint'ini test ediyoruz.
     it('should fetch all books', async () => {
@@ -74,8 +78,8 @@ describe('Book Controller Tests', () => {
     // Mevcut bir kitabı güncelleyen '/books/:id' endpoint'ini test ediyoruz.
     it('should update an existing book', async () => {
         // Test için bir kitap oluşturuyoruz.
-        const book = new Book({ title: 'Old Title', author: 'Old Author', publishedDate: new Date('2020-01-01') });
-        await book.save(); // Veritabanına kaydediyoruz.
+        const existingBook = new Book({ title: 'Old Title', author: 'Old Author', publishedDate: new Date('2020-01-01') });
+        await existingBook.save(); // Veritabanına kaydediyoruz.
 
         // Güncellenecek yeni veriler.
         const updatedBook = {
@@ -84,9 +88,12 @@ describe('Book Controller Tests', () => {
             publishedDate: new Date('2024-01-01').toISOString(), // Yayın tarihi, ISO formatında.
         };
 
+        // Elasticsearch'ten dönen verileri mockla
+        elasticsearchService.searchBooks.mockResolvedValue([{ _id: existingBook._id, title: 'Old Title' }]);
+
         // PUT isteği yaparak kitabı güncelliyoruz.
         const res = await request(app)
-            .put(`/books/${book._id}`) // Kitap ID'sini kullanarak güncelleme isteği.
+            .put(`/books/${existingBook._id}`) // Kitap ID'sini kullanarak güncelleme isteği.
             .set('Authorization', `Bearer ${token}`) // Token ekleniyor.
             .send(updatedBook); // Gönderilen güncellenmiş veri.
 
