@@ -7,7 +7,7 @@ const timezone = require('dayjs/plugin/timezone');
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Kullanıcının saat dilimini çekiyoruz
+// Kullanıcımızın saat dilimini çekiyoruz
 const userTimeZone = dayjs.tz.guess();
 
 // Zaman dilimini UTC'ye göre dönüştür
