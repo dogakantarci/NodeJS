@@ -1,4 +1,4 @@
-//app
+//app.js
 const express = require('express');
 const morgan = require('morgan');  // Morgan'ı içe aktar
 const connectDB = require('./config/db');
