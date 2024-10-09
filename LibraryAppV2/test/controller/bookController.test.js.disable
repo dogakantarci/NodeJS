@@ -41,7 +41,7 @@ describe('Book Controller Tests', () => {
         expect(res.statusCode).toEqual(200);
         expect(res.body).toBeInstanceOf(Array); // Yanıtın bir dizi olup olmadığını kontrol et.
     });
-/*
+
     // Geçersiz kitap ID'si için 404 dönen '/books/:id' endpoint'ini test ediyoruz.
     it('should return 404 if book not found', async () => {
         const res = await request(app)
@@ -132,4 +132,3 @@ describe('Book Controller Tests', () => {
         await mongoose.connection.close(); // Testlerden sonra veritabanı bağlantısını kapat.
     });
 });
-*/
