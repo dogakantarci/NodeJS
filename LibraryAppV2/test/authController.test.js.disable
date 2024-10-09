@@ -1,0 +1,85 @@
+// test/authController.test.js
+
+// Gerekli kütüphaneleri içe aktar
+const request = require('supertest'); // HTTP istekleri yapmak için supertest kütüphanesi
+const express = require('express'); // Express uygulaması oluşturmak için
+const authController = require('../src/controllers/authController'); // Auth kontrolörü
+const authService = require('../src/services/authService'); // Auth servisi
+
+// Express uygulamasını başlat
+const app = express();
+app.use(express.json()); // JSON verilerini işlemek için middleware ekle
+// Auth kontrolöründeki register ve login fonksiyonlarını tanımla
+app.post('/register', authController.register);
+app.post('/login', authController.login);
+
+// Auth kontrolörü için test tanımlamaları
+describe('Auth Controller', () => {
+    // Kullanıcı kayıt işlemi için test grubu
+    describe('POST /register', () => {
+        // Kullanıcıyı başarıyla kaydetme testi
+        it('should register a user and return a token', async () => {
+            const mockToken = 'test_token'; // Mock bir token oluştur
+            // Auth servisini taklit et ve başarılı bir sonuç döndür
+            authService.register = jest.fn().mockResolvedValue(mockToken);
+
+            // /register endpoint'ine POST isteği yap
+            const response = await request(app)
+                .post('/register')
+                .send({ username: 'testuser', password: 'testpassword' });
+
+            // Beklenen sonuçları kontrol et
+            expect(response.status).toEqual(201); // Status kodu 201 olmalı
+            expect(response.body).toHaveProperty('token', mockToken); // Token özelliği olmalı
+        });
+
+        // Kayıt işleminin başarısız olduğu durumu test et
+        it('should return an error if registration fails', async () => {
+            // Auth servisini taklit et ve hata döndür
+            authService.register = jest.fn().mockRejectedValue(new Error('Registration failed'));
+
+            // /register endpoint'ine POST isteği yap
+            const response = await request(app)
+                .post('/register')
+                .send({ username: 'testuser', password: 'testpassword' });
+
+            // Beklenen sonuçları kontrol et
+            expect(response.status).toEqual(400); // Status kodu 400 olmalı
+            expect(response.body).toHaveProperty('message', 'Registration failed'); // Hata mesajı olmalı
+        });
+    });
+
+    // Kullanıcı giriş işlemi için test grubu
+    describe('POST /login', () => {
+        // Kullanıcıyı başarıyla giriş yaptırma testi
+        it('should login a user and return a token', async () => {
+            const mockToken = 'test_token'; // Mock bir token oluştur
+            // Auth servisini taklit et ve başarılı bir sonuç döndür
+            authService.login = jest.fn().mockResolvedValue(mockToken);
+
+            // /login endpoint'ine POST isteği yap
+            const response = await request(app)
+                .post('/login')
+                .send({ username: 'testuser', password: 'testpassword' });
+
+            // Beklenen sonuçları kontrol et
+            expect(response.status).toEqual(200); // Status kodu 200 olmalı
+            expect(response.body).toHaveProperty('token', mockToken); // Token özelliği olmalı
+        });
+
+        // Giriş işleminin başarısız olduğu durumu test et
+        it('should return an error if login fails', async () => {
+            // Auth servisini taklit et ve hata döndür
+            authService.login = jest.fn().mockRejectedValue(new Error('Login failed'));
+
+            // /login endpoint'ine POST isteği yap
+            const response = await request(app)
+                .post('/login')
+                .send({ username: 'testuser', password: 'wrongpassword' });
+
+            // Beklenen sonuçları kontrol et
+            expect(response.status).toEqual(400); // Status kodu 400 olmalı
+            expect(response.body).toHaveProperty('message', 'Login failed'); // Hata mesajı olmalı
+        });
+    });
+});

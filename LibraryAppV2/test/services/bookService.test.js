@@ -50,4 +50,69 @@ describe('Book Service Tests', () => {
     expect(result).toBe(true);
     expect(deleteStub.calledOnceWith('mockId')).toBe(true);
   });
+
+  test('should return null if book not found by ID', async () => {
+    sinon.stub(bookModel, 'findById').resolves(null);
+
+    const book = await bookService.getBookById('nonExistingId');
+    expect(book).toBeNull();
+  });
+
+  test('should throw an error when required fields are missing', async () => {
+    const incompleteBook = { author: 'New Author' }; // `title` missing
+    await expect(bookService.createBook(incompleteBook)).rejects.toThrow();
+  });
+  test('should return null when trying to update a non-existing book', async () => {
+    sinon.stub(bookModel, 'findByIdAndUpdate').resolves(null);
+
+    const result = await bookService.updateBook('nonExistingId', { title: 'New Title' });
+    expect(result).toBeNull();
+  });
+
+
+  test('should return false when trying to delete a non-existing book', async () => {
+    sinon.stub(bookModel, 'findByIdAndDelete').resolves(null);
+
+    const result = await bookService.deleteBook('nonExistingId');
+    expect(result).toBeNull();
+  });
+
+  test('should handle errors from the model methods', async () => {
+    const errorMessage = 'Database error';
+    sinon.stub(bookModel, 'find').throws(new Error(errorMessage));
+
+    await expect(bookService.getAllBooks()).rejects.toThrow(errorMessage);
+  });
+
+  test('should return an empty array when no books are available', async () => {
+    sinon.stub(bookModel, 'find').resolves([]);
+    
+    const books = await bookService.getAllBooks();
+    expect(books).toEqual([]);
+  });
+
+  test('should throw an error when an invalid ID format is provided for update', async () => {
+    await expect(bookService.updateBook('invalidId', { title: 'New Title' })).rejects.toThrow();
+  });
+
+  test('should delete an existing book by ID', async () => {
+    sinon.stub(bookModel, 'findByIdAndDelete').resolves(true);
+
+    const result = await bookService.deleteBook('existingId');
+    expect(result).toBe(true);
+  });
+
+  test('should handle errors when adding a book', async () => {
+    const errorMessage = 'Database error';
+    sinon.stub(bookModel.prototype, 'save').throws(new Error(errorMessage));
+
+    await expect(bookService.createBook({ title: 'New Book', author: 'Author' })).rejects.toThrow(errorMessage);
+  });
+  test('should return updated book when update is successful', async () => {
+    const updatedBook = { title: 'Updated Book' };
+    sinon.stub(bookModel, 'findByIdAndUpdate').resolves(updatedBook);
+
+    const result = await bookService.updateBook('existingId', updatedBook);
+    expect(result).toEqual(updatedBook);
+  });
 });

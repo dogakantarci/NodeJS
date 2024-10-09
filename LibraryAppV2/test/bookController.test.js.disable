@@ -1,0 +1,38 @@
+const request = require('supertest');
+const app = require('../app'); // Update with your app path
+const jwt = require('jsonwebtoken'); // If you are using jwt for token generation
+const { connectDB, disconnectDB } = require('../src/config/db'); // Update with your DB config
+
+beforeAll(async () => {
+    await connectDB();
+    // Optionally create a test user and generate a token
+    const user = { id: 'testUserId' }; // Replace with actual user creation logic
+    token = jwt.sign(user, process.env.JWT_SECRET); // Use the same secret you use in your app
+});
+
+afterAll(async () => {
+    await disconnectDB();
+});
+
+describe('Book API', () => {
+    it('should create a book', async () => {
+        const res = await request(app)
+            .post('/books')
+            .set('Authorization', `Bearer ${token}`) // Include the token
+            .send({ title: 'New Book', author: 'Author' });
+
+        expect(res.statusCode).toEqual(201);
+        expect(res.body).toHaveProperty('id');
+        expect(res.body.title).toEqual('New Book');
+        expect(res.body.author).toEqual('Author');
+    });
+
+    it('should get all books', async () => {
+        const res = await request(app)
+            .get('/books')
+            .set('Authorization', `Bearer ${token}`); // Include the token
+
+        expect(res.statusCode).toEqual(200);
+        expect(res.body.length).toBeGreaterThan(0); // Ensure books are present
+    });
+});
