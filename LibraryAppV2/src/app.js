@@ -6,7 +6,7 @@ const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const helmet = require('helmet');
-
+const { exec } = require('child_process'); // Komutları çalıştırmak için ekle
 
 const app = express();
 
@@ -24,11 +24,29 @@ app.use(express.json());  // Express'in yerleşik JSON middleware'i
 app.get('/', (req, res) => {
     res.send('Anasayfaya hoş geldiniz!');
 });
+
 // Webhook endpoint'i 
 app.post('/github-webhook', (req, res) => {
-    console.log('Webhook verisi geldi:', req.body);
-    res.status(200).send('Webhook alındı!');
-  });
+    const payload = req.body;
+
+    // PR'ın kapatıldığını kontrol et
+    if (payload.action === 'closed' && payload.pull_request.merged) {
+        console.log('Pull Request merged, deployment starting...');
+
+        // Git pull ve sunucuyu yeniden başlatma
+        exec('git pull origin main && npm install && pm2 restart all', (err, stdout, stderr) => {
+            if (err) {
+                console.error(`Deployment hatası: ${stderr}`);
+                return res.status(500).send('Deployment başarısız oldu.');
+            }
+
+            console.log(`Deployment başarılı: ${stdout}`);
+            res.status(200).send('Deployment tamamlandı.');
+        });
+    } else {
+        res.status(200).send('Bu bir merge edilmiş PR değil.');
+    }
+});
   
 
 // Rotaları tanımla
