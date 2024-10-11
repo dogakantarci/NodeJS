@@ -24,6 +24,12 @@ app.use(express.json());  // Express'in yerleşik JSON middleware'i
 app.get('/', (req, res) => {
     res.send('Anasayfaya hoş geldiniz!');
 });
+// Webhook endpoint'i
+app.post('/github-webhook', (req, res) => {
+    console.log('Webhook verisi geldi:', req.body);
+    res.status(200).send('Webhook alındı!');
+  });
+  
 
 // Rotaları tanımla
 app.use('/search', searchRoutes);  // Arama rotasını tanımlayın
