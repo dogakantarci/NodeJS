@@ -2,12 +2,10 @@ const sinon = require('sinon');
 const { validateBook } = require('../../src/middleware/validationMiddleware');
 const Ajv = require('ajv');
 const ajvFormats = require('ajv-formats');
-const bookSchema = require('../../src/schemas/bookSchema.json');
 
 // AJV örneği oluşturma
 const ajv = new Ajv({ allErrors: true });
 ajvFormats(ajv);
-const validate = ajv.compile(bookSchema); // JSON şemasını derle
 
 describe('Validation Middleware', () => {
   let req, res, next;

@@ -40,6 +40,7 @@ exports.authenticateUser = async (req, res, next) => {
 
 
             next();
+            
     }       catch (error) {
             // Token doğrulama hatalarını işle
             console.error(error);
