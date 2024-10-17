@@ -27,10 +27,10 @@ app.get('/', (req, res) => {
 
 // Webhook endpoint'i 
 app.post('/github-webhook', (req, res) => {
-    const payload = req.body;
+    const { action, pull_request } = req.body;
 
     // PR'ın kapatıldığını kontrol et
-    if (payload.action === 'closed' && payload.pull_request.merged) {
+    if (action === 'closed' && pull_request.merged) {
         console.log('Pull Request merged, deployment starting...');
 
         // Git pull ve sunucuyu yeniden başlatma
