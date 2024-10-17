@@ -49,7 +49,7 @@ app.post('/github-webhook', (req, res) => {
 });
   
 
-// Rotaları tanımla
+// Rotaları tanımlayalım
 app.use('/search', searchRoutes);  // Arama rotasını tanımlayın
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
