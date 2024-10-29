@@ -75,7 +75,7 @@ To run the tests:
 This project is licensed under the GNU General Public License.
 
 ## Contact
-Please feel free to reach out with any questions or feedback!😊
+Please feel free to reach out with any questions or feedback! 😊
 
 ### Türkçe 🇹🇷
 
@@ -144,6 +144,7 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
     Kitap Sil: DELETE /books/:id
 
 ## Testler
+
 Testleri çalıştırmak için:
     ```bash
     npm test
@@ -153,4 +154,4 @@ Testleri çalıştırmak için:
 Bu proje GNU Genel Kamu Lisansı ile lisanslanmıştır.
 
 ## İletişim
-Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin!😊
+Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin! 😊
