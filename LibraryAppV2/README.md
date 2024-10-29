@@ -77,6 +77,8 @@ This project is licensed under the GNU General Public License.
 ## Contact
 Please feel free to reach out with any questions or feedback! 😊
 
+***
+
 ### Türkçe 🇹🇷
 
 # LibraryAppV2 📚
@@ -144,7 +146,6 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
     Kitap Sil: DELETE /books/:id
 
 ## Testler
-
 Testleri çalıştırmak için:
     ```bash
     npm test
