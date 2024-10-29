@@ -1,11 +1,10 @@
-### English README.md
+### English 🇬🇧
 
 # LibraryAppV2 📚
 
 LibraryAppV2 is a library application that allows users to manage, add, update, and delete books. This project is developed using Node.js and Express.js and stores data using MongoDB.
 
 ## Table of Contents 📋
-
 - [Features](#features-✨)
 - [Technologies](#technologies-⚙️)
 - [Installation](#installation-🛠️)
@@ -60,11 +59,11 @@ To set up your project in your local environment, follow these steps:
 ## Usage 🚀
 Once the application is up and running, you can use the following API endpoints:
 
-List All Books: GET /books
-Add a Book: POST /books
-Get a Specific Book: GET /books/:id
-Update a Book: PUT /books/:id
-Delete a Book: DELETE /books/:id
+    List All Books: GET /books
+    Add a Book: POST /books
+    Get a Specific Book: GET /books/:id
+    Update a Book: PUT /books/:id
+    Delete a Book: DELETE /books/:id
 
 ## Tests 🧪
 To run the tests:
@@ -77,15 +76,14 @@ This project is licensed under the GNU General Public License.
 ## Contact 😊
 Please feel free to reach out with any questions or feedback!
 
-### Türkçe README.md
+### Türkçe 🇹🇷
 
 # LibraryAppV2 📚
 
 LibraryAppV2, kullanıcıların kitapları yönetmesine, eklemesine, güncellemesine ve silmesine olanak tanıyan bir kütüphane uygulamasıdır. Bu proje, Node.js ve Express.js kullanılarak geliştirilmiştir ve MongoDB ile veri saklamaktadır.
 
 ## İçindekiler 📋
-
-- [Özellikler](#ozellikler-✨)
+- [Özellikler](#özellikler-✨)
 - [Teknolojiler](#teknolojiler-⚙️)
 - [Kurulum](#kurulum-🛠️)
 - [Kullanım](#kullanım-🚀)
@@ -149,6 +147,7 @@ Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
 ## Testler 🧪
 
     Testleri çalıştırmak için:
+
     ```bash
     npm test
 
