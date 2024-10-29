@@ -145,9 +145,7 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
 
 ## Testler
 
-Testleri çalıştırmak için:
-    ```bash
-    npm test
+Testleri çalıştırmak için: `npm test`
 
 ## Lisans
 
