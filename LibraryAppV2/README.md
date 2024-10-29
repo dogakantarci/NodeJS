@@ -67,7 +67,6 @@ Once the application is up and running, you can use the following API endpoints:
     Delete a Book: DELETE /books/:id
 
 ## Tests
-
 To run the tests:
     ```bash
     npm test
@@ -150,7 +149,7 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
 
 Testleri çalıştırmak için:
     ```bash
-    npm test
+npm test
 
 ## Lisans
 
