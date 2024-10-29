@@ -5,22 +5,22 @@
 LibraryAppV2 is a library application that allows users to manage, add, update, and delete books. This project is developed using Node.js and Express.js and stores data using MongoDB.
 
 ## Table of Contents 📋
-- [Features](#features-✨)
-- [Technologies](#technologies-⚙️)
-- [Installation](#installation-🛠️)
-- [Usage](#usage-🚀)
-- [Tests](#tests-🧪)
-- [License](#license-📄)
-- [Contact](#contact-😊)
+- [Features](#features)
+- [Technologies](#technologies)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Tests](#tests)
+- [License](#license)
+- [Contact](#contact)
 
-## Features ✨
+## Features
 
 - Add, update, and delete books
 - List all books
 - Search for a specific book by ID
 - Error handling and appropriate feedback messages
 
-## Technologies ⚙️
+## Technologies
 
 - Node.js
 - Express.js
@@ -29,7 +29,7 @@ LibraryAppV2 is a library application that allows users to manage, add, update, 
 - Sinon (for testing)
 - Jest (for testing)
 
-## Installation 🛠️
+## Installation
 
 To set up your project in your local environment, follow these steps:
 
@@ -51,12 +51,13 @@ To set up your project in your local environment, follow these steps:
    ```env
     MONGODB_URI=your_mongodb_uri
     PORT=3000
+
 4. **Start the Server:**
 
    ```bash
     npm start
 
-## Usage 🚀
+## Usage
 Once the application is up and running, you can use the following API endpoints:
 
     List All Books: GET /books
@@ -65,42 +66,40 @@ Once the application is up and running, you can use the following API endpoints:
     Update a Book: PUT /books/:id
     Delete a Book: DELETE /books/:id
 
-## Tests 🧪
-
+## Tests
 To run the tests:
+    ```bash
+    npm test
 
-```bash
-npm test
-
-## License 📄
+## License
 This project is licensed under the GNU General Public License.
 
-## Contact 😊
+## Contact
 Please feel free to reach out with any questions or feedback!
 
-### Türkçe 🇹🇷
+### Türkçe
 
-# LibraryAppV2 📚
+# LibraryAppV2
 
 LibraryAppV2, kullanıcıların kitapları yönetmesine, eklemesine, güncellemesine ve silmesine olanak tanıyan bir kütüphane uygulamasıdır. Bu proje, Node.js ve Express.js kullanılarak geliştirilmiştir ve MongoDB ile veri saklamaktadır.
 
-## İçindekiler 📋
-- [Özellikler](#ozellikler-✨)
-- [Teknolojiler](#teknolojiler-⚙️)
-- [Kurulum](#kurulum-🛠️)
-- [Kullanım](#kullanım-🚀)
-- [Testler](#testler-🧪)
-- [Lisans](#lisans-📄)
-- [İletişim](#iletisim-😊)
+## İçindekiler
+- [Özellikler](#ozellikler)
+- [Teknolojiler](#teknolojiler)
+- [Kurulum](#kurulum)
+- [Kullanım](#kullanım)
+- [Testler](#testler)
+- [Lisans](#lisans)
+- [İletişim](#iletisim)
 
-## Özellikler ✨
+## Özellikler
 
 - Kitap ekleme, güncelleme ve silme
 - Tüm kitapları listeleme
 - Belirli bir kitabı ID ile arama
 - Hata yönetimi ve uygun geri bildirim mesajları
 
-## Teknolojiler ⚙️
+## Teknolojiler
 
 - Node.js
 - Express.js
@@ -109,7 +108,7 @@ LibraryAppV2, kullanıcıların kitapları yönetmesine, eklemesine, güncelleme
 - Sinon (test için)
 - Jest (test için)
 
-## Kurulum 🛠️
+## Kurulum
 
 Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
 
@@ -125,18 +124,17 @@ Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
     npm install
 
 3. **Ortam Değişkenlerini Ayarlayın:**
-.env dosyasını oluşturun ve gerekli ortam değişkenlerini ekleyin. Örnek bir yapı şu şekilde olabilir:
-
+    .env dosyasını oluşturun ve gerekli ortam değişkenlerini ekleyin. Örnek bir yapı şu şekilde olabilir:
    ```env
     MONGODB_URI=your_mongodb_uri
     PORT=3000
 
 4. **Sunucuyu Başlatın:**
-
-   ```bash
+Sunucuyu başlatmak için aşağıdaki komutu kullanabilirsiniz:
+    ```bash
     npm start
 
-## Kullanım 🚀
+## Kullanım
 Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını kullanabilirsiniz:
 
     Tüm Kitapları Listele: GET /books
@@ -145,15 +143,15 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
     Kitap Güncelle: PUT /books/:id
     Kitap Sil: DELETE /books/:id
 
-## Testler 🧪
+## Testler
 
     Testleri çalıştırmak için:
     ```bash
     npm test
 
-## Lisans 📄
+## Lisans
 
 Bu proje GNU Genel Kamu Lisansı ile lisanslanmıştır.
 
-## İletişim 😊
+## İletişim
 Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin!
