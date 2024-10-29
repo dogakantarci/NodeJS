@@ -144,7 +144,6 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
     Kitap Sil: DELETE /books/:id
 
 ## Testler
-
 Testleri çalıştırmak için:
     ```bash
     npm test
