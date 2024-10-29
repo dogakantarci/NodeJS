@@ -68,7 +68,6 @@ Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
 ## Testler 🧪
 
     Testleri çalıştırmak için:
-
     ```bash
     npm test
 
