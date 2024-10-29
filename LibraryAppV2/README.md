@@ -1,16 +1,97 @@
+### English README.md
+
+# LibraryAppV2 📚
+
+LibraryAppV2 is a library application that allows users to manage, add, update, and delete books. This project is developed using Node.js and Express.js and stores data using MongoDB.
+
+## Table of Contents 📋
+
+- [Features](#features-✨)
+- [Technologies](#technologies-⚙️)
+- [Installation](#installation-🛠️)
+- [Usage](#usage-🚀)
+- [Tests](#tests-🧪)
+- [License](#license-📄)
+- [Contact](#contact-😊)
+
+## Features ✨
+
+- Add, update, and delete books
+- List all books
+- Search for a specific book by ID
+- Error handling and appropriate feedback messages
+
+## Technologies ⚙️
+
+- Node.js
+- Express.js
+- Mongoose
+- JSON Web Token
+- Sinon (for testing)
+- Jest (for testing)
+
+## Installation 🛠️
+
+To set up your project in your local environment, follow these steps:
+
+1. **Clone the Repository:**
+
+   ```bash
+   git clone https://github.com/dogakantarci/NodeJS.git
+   cd NodeJS/LibraryAppV2
+
+2. **Install Required Packages:**
+
+   ```bash
+    npm install
+
+3. **Set Environment Variables:**
+
+    Create a .env file and add the necessary environment variables. An example setup may look like this:
+
+   ```env
+    MONGODB_URI=your_mongodb_uri
+    PORT=3000
+4. **Start the Server:**
+
+   ```bash
+    npm start
+
+## Usage 🚀
+Once the application is up and running, you can use the following API endpoints:
+
+List All Books: GET /books
+Add a Book: POST /books
+Get a Specific Book: GET /books/:id
+Update a Book: PUT /books/:id
+Delete a Book: DELETE /books/:id
+
+## Tests 🧪
+To run the tests:
+
+    '''bash
+    npm test
+## License 📄
+This project is licensed under the GNU General Public License.
+
+## Contact 😊
+Please feel free to reach out with any questions or feedback!
+
+### Türkçe README.md
+
 # LibraryAppV2 📚
 
 LibraryAppV2, kullanıcıların kitapları yönetmesine, eklemesine, güncellemesine ve silmesine olanak tanıyan bir kütüphane uygulamasıdır. Bu proje, Node.js ve Express.js kullanılarak geliştirilmiştir ve MongoDB ile veri saklamaktadır.
 
 ## İçindekiler 📋
 
-- [Özellikler](#özellikler-✨)
+- [Özellikler](#ozellikler-✨)
 - [Teknolojiler](#teknolojiler-⚙️)
 - [Kurulum](#kurulum-🛠️)
 - [Kullanım](#kullanım-🚀)
 - [Testler](#testler-🧪)
 - [Lisans](#lisans-📄)
-- [İletişim](#iletişim-😊)
+- [İletişim](#iletisim-😊)
 
 ## Özellikler ✨
 
@@ -77,3 +158,6 @@ Bu proje GNU Genel Kamu Lisansı ile lisanslanmıştır.
 
 ## İletişim 😊
 Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin!
+
+
+
