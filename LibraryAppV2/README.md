@@ -67,9 +67,8 @@ Once the application is up and running, you can use the following API endpoints:
     Delete a Book: DELETE /books/:id
 
 ## Tests
-To run the tests:
-    ```bash
-    npm test
+```markdown
+To run the tests: `npm test`
 
 ## License
 This project is licensed under the GNU General Public License.
@@ -147,9 +146,8 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
 
 ## Testler
 
-Testleri çalıştırmak için:
-    ```bash
-    npm test
+```markdown
+Testleri çalıştırmak için: `npm test`
 
 ## Lisans
 
