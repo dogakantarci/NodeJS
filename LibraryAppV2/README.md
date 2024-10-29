@@ -66,10 +66,12 @@ Once the application is up and running, you can use the following API endpoints:
     Delete a Book: DELETE /books/:id
 
 ## Tests 🧪
+
 To run the tests:
 
-    '''bash
-    npm test
+```bash
+npm test
+
 ## License 📄
 This project is licensed under the GNU General Public License.
 
@@ -83,7 +85,7 @@ Please feel free to reach out with any questions or feedback!
 LibraryAppV2, kullanıcıların kitapları yönetmesine, eklemesine, güncellemesine ve silmesine olanak tanıyan bir kütüphane uygulamasıdır. Bu proje, Node.js ve Express.js kullanılarak geliştirilmiştir ve MongoDB ile veri saklamaktadır.
 
 ## İçindekiler 📋
-- [Özellikler](#özellikler-✨)
+- [Özellikler](#ozellikler-✨)
 - [Teknolojiler](#teknolojiler-⚙️)
 - [Kurulum](#kurulum-🛠️)
 - [Kullanım](#kullanım-🚀)
@@ -123,8 +125,7 @@ Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
     npm install
 
 3. **Ortam Değişkenlerini Ayarlayın:**
-
-    .env dosyasını oluşturun ve gerekli ortam değişkenlerini ekleyin. Örnek bir yapı şu şekilde olabilir:
+.env dosyasını oluşturun ve gerekli ortam değişkenlerini ekleyin. Örnek bir yapı şu şekilde olabilir:
 
    ```env
     MONGODB_URI=your_mongodb_uri
