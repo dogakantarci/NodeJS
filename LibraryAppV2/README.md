@@ -136,7 +136,7 @@ Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
     npm start
 
 ## Kullanım 🚀
-    Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını kullanabilirsiniz:
+Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını kullanabilirsiniz:
 
     Tüm Kitapları Listele: GET /books
     Kitap Ekle: POST /books
@@ -147,7 +147,6 @@ Projenizi yerel ortamınıza kurmak için aşağıdaki adımları izleyin:
 ## Testler 🧪
 
     Testleri çalıştırmak için:
-
     ```bash
     npm test
 
@@ -157,6 +156,3 @@ Bu proje GNU Genel Kamu Lisansı ile lisanslanmıştır.
 
 ## İletişim 😊
 Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin!
-
-
-
