@@ -75,15 +75,15 @@ To run the tests:
 This project is licensed under the GNU General Public License.
 
 ## Contact
-Please feel free to reach out with any questions or feedback!
+Please feel free to reach out with any questions or feedback!😊
 
-### Türkçe
+### Türkçe 🇹🇷
 
-# LibraryAppV2
+# LibraryAppV2 📚
 
 LibraryAppV2, kullanıcıların kitapları yönetmesine, eklemesine, güncellemesine ve silmesine olanak tanıyan bir kütüphane uygulamasıdır. Bu proje, Node.js ve Express.js kullanılarak geliştirilmiştir ve MongoDB ile veri saklamaktadır.
 
-## İçindekiler
+## İçindekiler 📋
 - [Özellikler](#ozellikler)
 - [Teknolojiler](#teknolojiler)
 - [Kurulum](#kurulum)
@@ -145,7 +145,7 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
 
 ## Testler
 
-    Testleri çalıştırmak için:
+Testleri çalıştırmak için:
     ```bash
     npm test
 
@@ -154,4 +154,4 @@ Uygulama çalışmaya başladıktan sonra, aşağıdaki API uç noktalarını ku
 Bu proje GNU Genel Kamu Lisansı ile lisanslanmıştır.
 
 ## İletişim
-Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin!
+Herhangi bir sorun veya geri bildirim için lütfen iletişime geçin!😊
