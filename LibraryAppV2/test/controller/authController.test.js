@@ -13,6 +13,11 @@ describe('authController', () => {
         };
     });
 
+    afterEach(() => {
+        // Tüm stub'ları temizle
+        sinon.restore();
+    });
+
     describe('register', () => {
         it('should handle existing username', async () => {
             req.body = { username: 'existingUser', password: 'password123' };
@@ -22,8 +27,6 @@ describe('authController', () => {
 
             expect(res.status.calledWith(400)).toBe(true);
             expect(res.json.calledWith({ message: 'Kullanıcı adı zaten mevcut' })).toBe(true);
-
-            authService.register.restore();
         });
 
         it('should validate password strength', async () => {
@@ -34,8 +37,6 @@ describe('authController', () => {
 
             expect(res.status.calledWith(400)).toBe(true);
             expect(res.json.calledWith({ message: 'Şifre çok zayıf' })).toBe(true);
-
-            authService.register.restore();
         });
     });
 
@@ -48,8 +49,6 @@ describe('authController', () => {
 
             expect(res.status.calledWith(400)).toBe(true);
             expect(res.json.calledWith({ message: 'Kullanıcı adı bulunamadı' })).toBe(true);
-
-            authService.login.restore();
         });
 
         it('should handle incorrect password', async () => {
@@ -60,8 +59,6 @@ describe('authController', () => {
 
             expect(res.status.calledWith(400)).toBe(true);
             expect(res.json.calledWith({ message: 'Yanlış şifre' })).toBe(true);
-
-            authService.login.restore();
         });
     });
 });

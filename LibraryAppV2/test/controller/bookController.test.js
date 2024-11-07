@@ -1,9 +1,8 @@
 const sinon = require('sinon');
-const mongoose = require('mongoose');
+const bookService = require('../../src/services/bookService');
 const BookController = require('../../src/controllers/bookController');
-const Book = require('../../src/models/Book');
 
-describe('BookController with Mongoose Mock', () => {
+describe('BookController', () => {
     let req, res, next;
 
     beforeEach(() => {
@@ -26,7 +25,7 @@ describe('BookController with Mongoose Mock', () => {
     describe('getAllBooks', () => {
         it('should return all books', async () => {
             const books = [{ title: 'Book 1' }, { title: 'Book 2' }];
-            sinon.stub(Book, 'find').resolves(books);
+            sinon.stub(bookService, 'getAllBooks').resolves(books);
 
             await BookController.getAllBooks(req, res, next);
 
@@ -36,7 +35,7 @@ describe('BookController with Mongoose Mock', () => {
 
         it('should handle errors', async () => {
             const error = new Error('Some error');
-            sinon.stub(Book, 'find').rejects(error);
+            sinon.stub(bookService, 'getAllBooks').rejects(error);
 
             await BookController.getAllBooks(req, res, next);
 
@@ -47,10 +46,9 @@ describe('BookController with Mongoose Mock', () => {
 
     describe('getBookById', () => {
         it('should return a book by ID', async () => {
-            const book = { _id: new mongoose.Types.ObjectId(), title: 'Book 1' };
-            req.params.id = book._id.toString();
-            sinon.stub(mongoose.Types.ObjectId, 'isValid').returns(true);
-            sinon.stub(Book, 'findById').resolves(book);
+            const book = { _id: '60c72b2f9b1d8c3b4c8d9b9a', title: 'Book 1' };
+            req.params.id = book._id;
+            sinon.stub(bookService, 'getBookById').resolves(book);
 
             await BookController.getBookById(req, res, next);
 
@@ -58,20 +56,9 @@ describe('BookController with Mongoose Mock', () => {
             expect(res.json.calledWith(book)).toBe(true);
         });
 
-        it('should handle invalid ID', async () => {
-            req.params.id = 'invalid-id';
-            sinon.stub(mongoose.Types.ObjectId, 'isValid').returns(false);
-
-            await BookController.getBookById(req, res, next);
-
-            expect(res.status.calledWith(404)).toBe(true);
-            expect(res.json.calledWith({ message: 'Geçersiz ID: Kitap bulunamadı' })).toBe(true);
-        });
-
         it('should handle book not found', async () => {
-            req.params.id = new mongoose.Types.ObjectId().toString();
-            sinon.stub(mongoose.Types.ObjectId, 'isValid').returns(true);
-            sinon.stub(Book, 'findById').resolves(null);
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            sinon.stub(bookService, 'getBookById').resolves(null);
 
             await BookController.getBookById(req, res, next);
 
@@ -81,9 +68,8 @@ describe('BookController with Mongoose Mock', () => {
 
         it('should handle errors', async () => {
             const error = new Error('Some error');
-            req.params.id = new mongoose.Types.ObjectId().toString();
-            sinon.stub(mongoose.Types.ObjectId, 'isValid').returns(true);
-            sinon.stub(Book, 'findById').rejects(error);
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            sinon.stub(bookService, 'getBookById').rejects(error);
 
             await BookController.getBookById(req, res, next);
 
@@ -91,45 +77,39 @@ describe('BookController with Mongoose Mock', () => {
             expect(res.json.calledWith({ message: 'Bir hata oluştu', error: error.message })).toBe(true);
         });
     });
-/*
-describe('createBook', () => {
-    it('should create a book', async () => {
-        const bookData = { title: 'New Book', author: 'Author' };
-        req.body = bookData;
-        const savedBook = { _id: new mongoose.Types.ObjectId(), ...bookData };
 
-        // Book modelinin bir örneğini oluştur ve save metodunu stub'la
-        const bookInstance = new Book(bookData);
-        sinon.stub(bookInstance, 'save').resolves(savedBook);
-        sinon.stub(Book, 'create').resolves(savedBook); // Eğer Book.create kullanıyorsan
+    describe('createBook', () => {
+        it('should create a book', async () => {
+            const bookData = { title: 'New Book', author: 'Author' };
+            const savedBook = { _id: '60c72b2f9b1d8c3b4c8d9b9a', ...bookData };
+            req.body = bookData;
+            sinon.stub(bookService, 'createBook').resolves(savedBook);
 
-        await BookController.createBook(req, res, next);
+            await BookController.createBook(req, res, next);
 
-        expect(res.status.calledWith(201)).toBe(true);
-        expect(res.json.calledWith(savedBook)).toBe(true);
+            expect(res.status.calledWith(201)).toBe(true);
+            expect(res.json.calledWith(savedBook)).toBe(true);
+        });
+
+        it('should handle errors while creating book', async () => {
+            const error = new Error('Some error');
+            req.body = { title: 'New Book', author: 'Author' };
+            sinon.stub(bookService, 'createBook').rejects(error);
+
+            await BookController.createBook(req, res, next);
+
+            expect(res.status.calledWith(400)).toBe(true);
+            expect(res.json.calledWith({ message: 'Kitap oluşturma hatası', error: error.message })).toBe(true);
+        });
     });
-
-    it('should handle errors while creating book', async () => {
-        const error = new Error('Some error');
-        req.body = { title: 'New Book', author: 'Author' };
-
-        const bookInstance = new Book(req.body);
-        sinon.stub(bookInstance, 'save').rejects(error);
-
-        await BookController.createBook(req, res, next);
-
-        expect(res.status.calledWith(400)).toBe(true);
-        expect(res.json.calledWith({ message: 'Kitap oluşturma hatası', error: error.message })).toBe(true);
-    });
-});*/
 
     describe('updateBook', () => {
         it('should update a book', async () => {
-            const bookId = new mongoose.Types.ObjectId().toString();
+            const bookId = '60c72b2f9b1d8c3b4c8d9b9a';
             const updatedBook = { _id: bookId, title: 'Updated Book' };
             req.params.id = bookId;
             req.body = { title: 'Updated Book' };
-            sinon.stub(Book, 'findByIdAndUpdate').resolves(updatedBook);
+            sinon.stub(bookService, 'updateBook').resolves(updatedBook);
 
             await BookController.updateBook(req, res, next);
 
@@ -139,9 +119,9 @@ describe('createBook', () => {
 
         it('should handle errors while updating', async () => {
             const error = new Error('Some error');
-            req.params.id = new mongoose.Types.ObjectId().toString();
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
             req.body = { title: 'Updated Book' };
-            sinon.stub(Book, 'findByIdAndUpdate').rejects(error);
+            sinon.stub(bookService, 'updateBook').rejects(error);
 
             await BookController.updateBook(req, res, next);
 
@@ -152,8 +132,8 @@ describe('createBook', () => {
 
     describe('deleteBook', () => {
         it('should delete a book', async () => {
-            req.params.id = new mongoose.Types.ObjectId().toString();
-            sinon.stub(Book, 'findByIdAndDelete').resolves(true);
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            sinon.stub(bookService, 'deleteBook').resolves(true);
 
             await BookController.deleteBook(req, res, next);
 
@@ -163,8 +143,8 @@ describe('createBook', () => {
 
         it('should handle errors while deleting', async () => {
             const error = new Error('Some error');
-            req.params.id = new mongoose.Types.ObjectId().toString();
-            sinon.stub(Book, 'findByIdAndDelete').rejects(error);
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            sinon.stub(bookService, 'deleteBook').rejects(error);
 
             await BookController.deleteBook(req, res, next);
 
