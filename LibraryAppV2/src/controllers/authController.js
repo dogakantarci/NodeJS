@@ -1,20 +1,30 @@
 // src/controllers/authController.js
+const { BadRequestException, UnauthorizedException } = require('../exceptions/HttpException'); // HttpException'ları içe aktar
 const authService = require('../services/authService');
+const ResponseHelper = require('../utils/responseHelper');
+const { HTTPStatusCode } = require('../utils/HttpStatusCode'); // HTTP durum kodları
 
-exports.register = async (req, res) => {
+
+exports.register = async (req, res, next) => {
     try {
         const token = await authService.register(req.body);
-        res.status(201).json({ token });
+        ResponseHelper.success(res, HTTPStatusCode.Created, { token }, 'Kayıt başarılı');
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        next(new BadRequestException(error.message));
     }
 };
 
-exports.login = async (req, res) => {
+exports.login = async (req, res, next) => {
     try {
         const token = await authService.login(req.body.username, req.body.password);
-        res.status(200).json({ token });
+        
+        if (!token) {
+            throw new UnauthorizedException('Kullanıcı adı veya şifre hatalı');
+        }
+
+        ResponseHelper.success(res, HTTPStatusCode.Ok, { token }, 'Giriş başarılı');
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        next(error);
     }
 };
+

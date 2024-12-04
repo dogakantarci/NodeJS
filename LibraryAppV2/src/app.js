@@ -7,6 +7,7 @@ const authRoutes = require('./routes/authRoutes');
 const searchRoutes = require('./routes/searchRoutes');
 const helmet = require('helmet');
 const { exec } = require('child_process'); // Komutları çalıştırmak için ekle
+const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 
@@ -17,8 +18,9 @@ app.use(morgan('combined'));  // 'combined' formatında loglama yapar
 // Helmet middleware'ini ekle
 app.use(helmet());
 
-// Middleware
 app.use(express.json());  // Express'in yerleşik JSON middleware'i
+
+
 
 // Anasayfa rotası
 app.get('/', (req, res) => {
@@ -47,11 +49,13 @@ app.post('/github-webhook', (req, res) => {
         res.status(200).send('Bu bir merge edilmiş PR değil.');
     }
 });
-  
+
 
 // Rotaları tanımlayalım
 app.use('/search', searchRoutes);  // Arama rotasını tanımlayın
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
+
+app.use(errorHandler);
 
 module.exports = app;

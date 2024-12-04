@@ -1,0 +1,175 @@
+const sinon = require('sinon');
+const BookController = require('../../src/controllers/bookController');
+const bookService = require('../../src/services/bookService');
+
+describe('BookController', () => {
+    let req, res, next;
+
+    beforeEach(() => {
+        req = {
+            body: {},
+            params: {},
+            query: {},
+        };
+        res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn(),
+        };
+        next = jest.fn();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();
+    });
+
+    describe('getAllBooks', () => {
+        it('should return all books', async () => {
+            const books = [{ title: 'Book 1' }, { title: 'Book 2' }];
+            const getAllBooksMock = jest.spyOn(bookService, 'getAllBooks').mockResolvedValue(books);
+
+            await BookController.getAllBooks(req, res, next);
+
+            expect(getAllBooksMock).toHaveBeenCalledTimes(1); // Burada mock çağrısı kontrol edilir
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith(books);
+        });
+
+        it('should handle errors', async () => {
+            const error = new Error('Some error');
+            const getAllBooksMock = jest.spyOn(bookService, 'getAllBooks').mockRejectedValue(error);
+        
+            await BookController.getAllBooks(req, res, next);
+        
+            // **Hatalı durum**: Kodun hata durumunda res.json() fonksiyonuna beklenen error nesnesi doğru şekilde geçmiyor olabilir.
+            // Bu durumda şöyle bir hata olabilir: `error.message` kullanılması yerine farklı bir hata nesnesi gönderiliyor.
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Kitapları alma hatası',
+                error: error.message, // Burada hata mesajı doğru şekilde kontrol edilmeli
+            });
+        });
+    });
+
+    describe('getBookById', () => {
+        it('should return a book by ID', async () => {
+            const book = { _id: '60c72b2f9b1d8c3b4c8d9b9a', title: 'Book 1' };
+            req.params.id = book._id;
+            const getBookByIdMock = jest.spyOn(bookService, 'getBookById').mockResolvedValue(book);
+
+            await BookController.getBookById(req, res, next);
+
+            // **Hatalı durum**: getBookById() fonksiyonu doğru çalışıyor, ancak `bookService.getBookById` doğru parametreyi almadığında,
+            // burada gelen ID'nin doğruluğu kontrol edilmelidir.
+            expect(getBookByIdMock).toHaveBeenCalledWith(book._id); // Buradaki parametreyi dikkatle kontrol et
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith(book);
+        });
+
+        it('should handle book not found', async () => {
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            const getBookByIdMock = jest.spyOn(bookService, 'getBookById').mockResolvedValue(null);
+        
+            await BookController.getBookById(req, res, next);
+        
+            // **Hatalı durum**: Eğer kitap bulunamazsa, `null` döndürüldüğünde test doğru hata mesajını döndürmeli
+            expect(res.status).toHaveBeenCalledWith(404); // 404 durumu burada doğru mu kontrol ediliyor?
+            expect(res.json).toHaveBeenCalledWith({ message: 'Kitap bulunamadı' });
+        });
+
+        it('should handle errors', async () => {
+            const error = new Error('Some error');
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            const getBookByIdMock = jest.spyOn(bookService, 'getBookById').mockRejectedValue(error);
+        
+            await BookController.getBookById(req, res, next);
+        
+            // **Hatalı durum**: Burada hata kontrolü yapılırken, `res.json`'a geçen hata nesnesi doğru olmayabilir.
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Bir hata oluştu', error: error.message });
+        });
+    });
+
+    describe('createBook', () => {
+        it('should create a book', async () => {
+            const bookData = { title: 'New Book', author: 'Author' };
+            const savedBook = { _id: '60c72b2f9b1d8c3b4c8d9b9a', ...bookData };
+            req.body = bookData;
+            const createBookMock = jest.spyOn(bookService, 'createBook').mockResolvedValue(savedBook);
+
+            await BookController.createBook(req, res, next);
+
+            expect(createBookMock).toHaveBeenCalledWith(bookData);
+            expect(res.status).toHaveBeenCalledWith(201);
+            expect(res.json).toHaveBeenCalledWith(savedBook);
+        });
+
+        it('should handle errors while creating book', async () => {
+            const error = new Error('Some error');
+            req.body = { title: 'New Book', author: 'Author' };
+            const createBookMock = jest.spyOn(bookService, 'createBook').mockRejectedValue(error);
+        
+            await BookController.createBook(req, res, next);
+        
+            // **Hatalı durum**: Burada hata mesajı 400 yerine 500 dönmesi gereken durum olabilir.
+            expect(res.status).toHaveBeenCalledWith(400); // Hatalı durum: Bu genelde 500 olmalı
+            expect(res.json).toHaveBeenCalledWith({ message: 'Kitap oluşturma hatası', error: error.message });
+        });
+    });
+
+    describe('updateBook', () => {
+        it('should update a book', async () => {
+            const bookId = '60c72b2f9b1d8c3b4c8d9b9a';
+            const updatedBook = { _id: bookId, title: 'Updated Book' };
+            req.params.id = bookId;
+            req.body = { title: 'Updated Book' };
+            const updateBookMock = jest.spyOn(bookService, 'updateBook').mockResolvedValue(updatedBook);
+
+            await BookController.updateBook(req, res, next);
+
+            expect(updateBookMock).toHaveBeenCalledWith(bookId, req.body);
+            expect(res.status).toHaveBeenCalledWith(200);
+            expect(res.json).toHaveBeenCalledWith(updatedBook);
+        });
+
+        it('should handle errors while updating', async () => {
+            const error = new Error('Some error');
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            req.body = { title: 'Updated Book' };
+            const updateBookMock = jest.spyOn(bookService, 'updateBook').mockRejectedValue(error);
+        
+            await BookController.updateBook(req, res, next);
+        
+            // **Hatalı durum**: Hata mesajları ve durum kodu 500 olmalı
+            expect(res.status).toHaveBeenCalledWith(500); // Burada hata 500 olmalı, kontrol edilmesi gerek
+            expect(res.json).toHaveBeenCalledWith({ message: 'Sunucu hatası', error: error.message });
+        });
+    });
+
+    describe('deleteBook', () => {
+        it('should delete a book', async () => {
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            const deleteBookMock = jest.spyOn(bookService, 'deleteBook').mockResolvedValue(true);
+
+            await BookController.deleteBook(req, res, next);
+
+            expect(deleteBookMock).toHaveBeenCalledWith(req.params.id);
+            expect(res.status).toHaveBeenCalledWith(204);
+            expect(res.json).toHaveBeenCalledWith({ message: 'Kitap silindi' });
+        });
+
+        it('should handle errors while deleting', async () => {
+            const error = new Error('Some error');
+            req.params.id = '60c72b2f9b1d8c3b4c8d9b9a';
+            const deleteBookMock = jest.spyOn(bookService, 'deleteBook').mockRejectedValue(error);
+        
+            await BookController.deleteBook(req, res, next);
+        
+            // **Hatalı durum**: Burada hataların doğru şekilde işlenip işlenmediğini kontrol etmeliyiz.
+            expect(res.status).toHaveBeenCalledWith(500);
+            expect(res.json).toHaveBeenCalledWith({
+                message: 'Kitap silme hatası',
+                error: error.message,
+            });
+        });
+    });
+});
