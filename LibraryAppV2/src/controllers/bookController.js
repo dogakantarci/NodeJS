@@ -2,11 +2,14 @@ const BookService = require('../services/bookService');
 const { addLog } = require('../services/elasticsearchService');
 const mongoose = require('mongoose');
 const { search } = require('../services/elasticsearchService'); // Doğru bir şekilde içe aktarılmalı
+const { InternalServerErrorException, BadRequestException, NotFoundException } = require('../exceptions/HttpException');
+const { HTTPStatusCode } = require('../utils/HttpStatusCode');
 
-exports.getAllBooks = async (req, res) => {
+
+exports.getAllBooks = async (req, res, next) => {
     try {
         const books = await BookService.getAllBooks();
-        res.status(200).json(books);
+        res.status(HTTPStatusCode.Ok).json(books);
 
         await addLog({
             id: `getAllBooks-${Date.now()}`,
@@ -16,7 +19,7 @@ exports.getAllBooks = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Kitapları alma hatası', error: error.message });
+        next(new InternalServerErrorException('Kitapları alma hatası', error.message));  // Hata sınıfını kullan
         await addLog({
             id: `getAllBooks-${Date.now()}`,
             message: `Error fetching books: ${error.message}`,
@@ -26,20 +29,22 @@ exports.getAllBooks = async (req, res) => {
     }
 };
 
-exports.getBookById = async (req, res) => {
+exports.getBookById = async (req, res, next) => {
     const { id } = req.params;
 
     // Geçersiz ID kontrolü
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ message: 'Geçersiz ID: Kitap bulunamadı' });
+        return next(new NotFoundException('Geçersiz ID: Kitap bulunamadı'));  // Geçersiz ID hatası
     }
 
     try {
         const book = await BookService.getBookById(id);
         if (!book) {
-            return res.status(404).json({ message: 'Kitap bulunamadı' });
+            return next(new NotFoundException('Kitap bulunamadı'));  // Kitap bulunamadı hatası
         }
-        res.status(200).json(book);
+        res.status(HTTPStatusCode.Ok).json(book);
+        
+        // Başarılı işlem log'u
         await addLog({
             id: `getBookById-${Date.now()}`,
             message: `Book with ID ${id} fetched successfully`,
@@ -48,25 +53,29 @@ exports.getBookById = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Bir hata oluştu', error: error.message });
+        
+        next(new InternalServerErrorException(`Kitap alma hatası: ${error.message}`));
+        
+        // Hata log'u
         await addLog({
             id: `getBookById-${Date.now()}`,
-            message: `Error fetching book with ID ${req.params.id}: ${error.message}`,
+            message: `Error fetching book with ID ${id}: ${error.message}`,
             level: 'error',
             timestamp: new Date().toISOString()
         });
     }
 };
 
-exports.createBook = async (req, res) => {
+
+exports.createBook = async (req, res, next) => {
     const { title, author } = req.body;
     if (!title || !author) {
-        return res.status(400).json({ message: 'Tüm alanlar gereklidir: title, author, publishedDate' });
+        return next(new BadRequestException('Tüm alanlar gereklidir: title, author, publishedDate')); // Hata sınıfını kullan
     }
 
     try {
         const book = await BookService.createBook(req.body);
-        res.status(201).json(book);
+        res.status(HTTPStatusCode.Created).json(book);
         await addLog({
             id: `createBook-${Date.now()}`,
             message: `Book with ID ${book._id} created successfully`,
@@ -75,7 +84,7 @@ exports.createBook = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(400).json({ message: 'Kitap oluşturma hatası', error: error.message });
+        next(new InternalServerErrorException(`Kitap oluşturma hatası: ${error.message}`)); // Hata sınıfını kullan
         await addLog({
             id: `createBook-${Date.now()}`,
             message: `Error creating book: ${error.message}`,
@@ -85,16 +94,16 @@ exports.createBook = async (req, res) => {
     }
 };
 
-exports.updateBook = async (req, res) => {
+exports.updateBook = async (req, res, next) => {
     const { id } = req.params;
 
     try {
         const book = await BookService.updateBook(id, req.body);
         if (!book) {
-            return res.status(404).json({ message: 'Kitap bulunamadı' });
+            return next(new NotFoundException('Kitap bulunamadı'));
         }
 
-        res.status(200).json(book);
+        res.status(HTTPStatusCode.Ok).json(book);
         await addLog({
             id: `updateBook-${Date.now()}`,
             message: `Book with ID ${book._id} updated successfully`,
@@ -104,9 +113,9 @@ exports.updateBook = async (req, res) => {
     } catch (error) {
         console.error(error);
         if (error.name === 'ValidationError' || error.name === 'CastError') {
-            res.status(400).json({ message: 'Geçersiz veri formatı', error: error.message });
+            next(new BadRequestException(`Geçersiz veri formatı: ${error.message}`)); // Hata sınıfını kullan
         } else {
-            res.status(500).json({ message: 'Sunucu hatası', error: error.message });
+            next(new InternalServerErrorException(`Sunucu hatası: ${error.message}`)); // Hata sınıfını kullan
         }
 
         await addLog({
@@ -118,16 +127,16 @@ exports.updateBook = async (req, res) => {
     }
 };
 
-exports.deleteBook = async (req, res) => {
+exports.deleteBook = async (req, res, next) => {
     const { id } = req.params;
 
     try {
         const book = await BookService.deleteBook(id);
         if (!book) {
-            return res.status(404).json({ message: 'Kitap bulunamadı' });
+            return next(new NotFoundException('Kitap bulunamadı'));
         }
 
-        res.status(204).json({ message: 'Kitap silindi' });
+        res.status(HTTPStatusCode.NoContent).json({ message: 'Kitap silindi' });
         await addLog({
             id: `deleteBook-${Date.now()}`,
             message: `Book with ID ${req.params.id} deleted successfully`,
@@ -136,7 +145,7 @@ exports.deleteBook = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Kitap silme hatası', error: error.message });
+        next(new InternalServerErrorException(`Kitap silme hatası: ${error.message}`)); // Hata sınıfını kullan
         await addLog({
             id: `deleteBook-${Date.now()}`,
             message: `Error deleting book with ID ${req.params.id}: ${error.message}`,
@@ -147,17 +156,17 @@ exports.deleteBook = async (req, res) => {
 };
 
 // Arama işlemi için
-exports.searchBooks = async (req, res) => {
+exports.searchBooks = async (req, res, next) => {
     const query = req.query.q; // Arama sorgusunu almak için
 
     // Arama sorgusunun geçerliliğini kontrol et
     if (!query) {
-        return res.status(400).json({ message: 'Arama sorgusu gereklidir' });
+        return next(new BadRequestException('Arama sorgusu gereklidir')); // Hata sınıfını kullan
     }
 
     try {
         const results = await search(query);
-        res.status(200).json(results);
+        res.status(HTTPStatusCode.Ok).json(results);
 
         await addLog({
             id: `searchBooks-${Date.now()}`,
@@ -167,7 +176,7 @@ exports.searchBooks = async (req, res) => {
         });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Arama hatası', error: error.message });
+        next(new InternalServerErrorException(`Arama hatası: ${error.message}`)); // Hata sınıfını kullan
         await addLog({
             id: `searchBooks-${Date.now()}`,
             message: `Error performing search with query: ${query} - ${error.message}`,

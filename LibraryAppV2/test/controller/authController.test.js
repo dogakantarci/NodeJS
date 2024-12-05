@@ -1,67 +1,96 @@
-const sinon = require('sinon');
-const authController = require('../../src/controllers/authController');
+const { register, login } = require('../../src/controllers/authController');
 const authService = require('../../src/services/authService');
+const { HTTPStatusCode } = require('../../src/utils/HttpStatusCode');
+const { BadRequestException, UnauthorizedException } = require('../../src/exceptions/HttpException');
 
-describe('authController', () => {
-    let req, res;
+jest.mock('../../src/services/authService');
+
+describe('AuthController', () => {
+    let req, res, next;
 
     beforeEach(() => {
-        req = { body: {} };
-        res = {
-            status: sinon.stub().returnsThis(),
-            json: sinon.stub(),
+        req = {
+            body: {
+                username: 'testUser',
+                password: 'testPass',
+            },
         };
+        res = {
+            status: jest.fn().mockReturnThis(),  // mock status fonksiyonunu döndür
+            json: jest.fn().mockReturnThis(),    // mock json fonksiyonunu döndür
+        };
+        next = jest.fn();
+    });
+
+    afterEach(() => {
+        jest.clearAllMocks();  // her testten sonra mockları temizle
     });
 
     describe('register', () => {
-        it('should handle existing username', async () => {
-            req.body = { username: 'existingUser', password: 'password123' };
-            sinon.stub(authService, 'register').rejects(new Error('Kullanıcı adı zaten mevcut'));
+        it('should return success when register is successful', async () => {
+            const mockToken = 'mockToken';
+            authService.register.mockResolvedValue(mockToken);  // register fonksiyonu başarılı simüle ediliyor
 
-            await authController.register(req, res);
+            await register(req, res, next);  // register fonksiyonunu çağır
 
-            expect(res.status.calledWith(400)).toBe(true);
-            expect(res.json.calledWith({ message: 'Kullanıcı adı zaten mevcut' })).toBe(true);
-
-            authService.register.restore();
+            // Doğru HTTP durumu ve json yanıtı kontrol et
+            expect(res.status).toHaveBeenCalledWith(HTTPStatusCode.Created);  // 201
+            expect(res.json).toHaveBeenCalledWith({
+                status: 'success',
+                message: 'Kayıt başarılı',
+                data: { token: mockToken },
+            });
+            expect(next).not.toHaveBeenCalled();  // next fonksiyonunun çağrılmadığını kontrol et
         });
 
-        it('should validate password strength', async () => {
-            req.body = { username: 'newUser', password: 'weak' }; // Zayıf şifre
-            sinon.stub(authService, 'register').rejects(new Error('Şifre çok zayıf'));
+        it('should return error when register fails', async () => {
+            const error = new Error('Registration failed');
+            authService.register.mockRejectedValue(error);  // register fonksiyonu hata döndürüyor
 
-            await authController.register(req, res);
+            await register(req, res, next);  // register fonksiyonunu çağır
 
-            expect(res.status.calledWith(400)).toBe(true);
-            expect(res.json.calledWith({ message: 'Şifre çok zayıf' })).toBe(true);
-
-            authService.register.restore();
+            expect(next).toHaveBeenCalledWith(new BadRequestException('Registration failed'));
+            expect(res.status).not.toHaveBeenCalled();  // res.status'un çağrılmadığını kontrol et
+            expect(res.json).not.toHaveBeenCalled();    // res.json'un çağrılmadığını kontrol et
         });
     });
 
     describe('login', () => {
-        it('should handle incorrect username', async () => {
-            req.body = { username: 'wrongUser', password: 'password123' };
-            sinon.stub(authService, 'login').rejects(new Error('Kullanıcı adı bulunamadı'));
+        it('should return success when login is successful', async () => {
+            const mockToken = 'mockToken';
+            authService.login.mockResolvedValue(mockToken);  // login fonksiyonu başarılı simüle ediliyor
 
-            await authController.login(req, res);
+            await login(req, res, next);  // login fonksiyonunu çağır
 
-            expect(res.status.calledWith(400)).toBe(true);
-            expect(res.json.calledWith({ message: 'Kullanıcı adı bulunamadı' })).toBe(true);
-
-            authService.login.restore();
+            // Doğru HTTP durumu ve json yanıtı kontrol et
+            expect(res.status).toHaveBeenCalledWith(HTTPStatusCode.Ok);  // 200
+            expect(res.json).toHaveBeenCalledWith({
+                status: 'success',
+                message: 'Giriş başarılı',
+                data: { token: mockToken },
+            });
+            expect(next).not.toHaveBeenCalled();  // next fonksiyonunun çağrılmadığını kontrol et
         });
 
-        it('should handle incorrect password', async () => {
-            req.body = { username: 'testUser', password: 'wrongPassword' }; // Yanlış şifre
-            sinon.stub(authService, 'login').rejects(new Error('Yanlış şifre'));
+        it('should return error when login fails due to invalid credentials', async () => {
+            authService.login.mockResolvedValue(null);  // Geçersiz kimlik bilgisi simüle et
 
-            await authController.login(req, res);
+            await login(req, res, next);  // login fonksiyonunu çağır
 
-            expect(res.status.calledWith(400)).toBe(true);
-            expect(res.json.calledWith({ message: 'Yanlış şifre' })).toBe(true);
+            expect(next).toHaveBeenCalledWith(new UnauthorizedException('Kullanıcı adı veya şifre hatalı'));
+            expect(res.status).not.toHaveBeenCalled();  // res.status'un çağrılmadığını kontrol et
+            expect(res.json).not.toHaveBeenCalled();    // res.json'un çağrılmadığını kontrol et
+        });
 
-            authService.login.restore();
+        it('should return error when login fails due to an exception', async () => {
+            const error = new Error('Login failed');
+            authService.login.mockRejectedValue(error);  // login hatası döndür
+
+            await login(req, res, next);  // login fonksiyonunu çağır
+
+            expect(next).toHaveBeenCalledWith(error);  // hata ile next fonksiyonu çağrılıyor
+            expect(res.status).not.toHaveBeenCalled();  // res.status'un çağrılmadığını kontrol et
+            expect(res.json).not.toHaveBeenCalled();    // res.json'un çağrılmadığını kontrol et
         });
     });
 });
