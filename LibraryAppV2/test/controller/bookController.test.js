@@ -74,9 +74,6 @@ describe('BookController Unit Tests', () => {
             req.body = {}; // Eksik veriler
             sandbox.stub(bookService, 'createBook').rejects(new Error('Validation error'));
 
-            // Mock BadRequestException
-            const badRequestException = new BadRequestException('Tüm alanlar gereklidir: title, author, publishedDate');
-
             await BookController.createBook(req, res, next);
 
             sinon.assert.calledOnce(next);
