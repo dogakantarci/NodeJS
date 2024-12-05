@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = void 0;
 // Error Handler Middleware
-const errorHandler = (err, req, res, next) => {
+const errorHandler = (err, req, res) => {
     // Hata durumu varsa, bunu al, yoksa 500 (Internal Server Error) kullan
     const status = err.status || 500;
     // Eğer hata mesajı varsa, bunu al, yoksa varsayılan bir mesaj kullan
