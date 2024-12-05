@@ -20,8 +20,6 @@ app.use(helmet());
 
 app.use(express.json());  // Express'in yerleşik JSON middleware'i
 
-
-
 // Anasayfa rotası
 app.get('/', (req, res) => {
     res.send('Anasayfaya hoş geldiniz!');

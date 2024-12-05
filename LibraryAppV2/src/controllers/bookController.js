@@ -1,16 +1,31 @@
 const BookService = require('../services/bookService');
 const { addLog } = require('../services/elasticsearchService');
 const mongoose = require('mongoose');
-const { search } = require('../services/elasticsearchService'); // Doğru bir şekilde içe aktarılmalı
+const { search } = require('../services/elasticsearchService');
 const { InternalServerErrorException, BadRequestException, NotFoundException } = require('../exceptions/HttpException');
 const { HTTPStatusCode } = require('../utils/HttpStatusCode');
-
+const redis = require('../redisClient');
 
 exports.getAllBooks = async (req, res, next) => {
     try {
+        const cacheKey = 'allBooks'; // Genel kitaplar için cache anahtarı
+
+        // Redis cache kontrolü
+        const cachedBooks = await redis.get(cacheKey);
+        if (cachedBooks) {
+            console.log('Cache kullanıldı');
+            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks)); // Cache'ten kitaplar döndür
+        }
+
+        console.log('Cache bulunamadı, veritabanından alınıyor...');
+        // Cache'te veri yoksa, veritabanından kitapları al
         const books = await BookService.getAllBooks();
         res.status(HTTPStatusCode.Ok).json(books);
 
+        // Cache'e ekle
+        redis.setex(cacheKey, 3600, JSON.stringify(books)); // 1 saat boyunca cache'le
+
+        // Başarılı işlem log'u
         await addLog({
             id: `getAllBooks-${Date.now()}`,
             message: 'All books fetched successfully',
@@ -20,6 +35,8 @@ exports.getAllBooks = async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(new InternalServerErrorException('Kitapları alma hatası', error.message));  // Hata sınıfını kullan
+
+        // Hata log'u
         await addLog({
             id: `getAllBooks-${Date.now()}`,
             message: `Error fetching books: ${error.message}`,
@@ -38,12 +55,24 @@ exports.getBookById = async (req, res, next) => {
     }
 
     try {
+        const cacheKey = `book:${id}`; // Kitap ID'sine özel cache anahtarı
+
+        // Redis cache kontrolü
+        const cachedBook = await redis.get(cacheKey);
+        if (cachedBook) {
+            console.log('Cache kullanıldı');
+            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBook)); // Cache'ten kitap verisini döndür
+        }
+        console.log('Cache bulunamadı, veritabanından alınıyor...');
         const book = await BookService.getBookById(id);
         if (!book) {
             return next(new NotFoundException('Kitap bulunamadı'));  // Kitap bulunamadı hatası
         }
         res.status(HTTPStatusCode.Ok).json(book);
         
+        // Cache'e ekle
+        redis.setex(cacheKey, 3600, JSON.stringify(book)); // 1 saat boyunca cache'le
+
         // Başarılı işlem log'u
         await addLog({
             id: `getBookById-${Date.now()}`,
@@ -66,7 +95,6 @@ exports.getBookById = async (req, res, next) => {
     }
 };
 
-
 exports.createBook = async (req, res, next) => {
     const { title, author } = req.body;
     if (!title || !author) {
@@ -76,6 +104,8 @@ exports.createBook = async (req, res, next) => {
     try {
         const book = await BookService.createBook(req.body);
         res.status(HTTPStatusCode.Created).json(book);
+
+        // Başarılı işlem log'u
         await addLog({
             id: `createBook-${Date.now()}`,
             message: `Book with ID ${book._id} created successfully`,
@@ -85,6 +115,8 @@ exports.createBook = async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(new InternalServerErrorException(`Kitap oluşturma hatası: ${error.message}`)); // Hata sınıfını kullan
+
+        // Hata log'u
         await addLog({
             id: `createBook-${Date.now()}`,
             message: `Error creating book: ${error.message}`,
@@ -104,6 +136,8 @@ exports.updateBook = async (req, res, next) => {
         }
 
         res.status(HTTPStatusCode.Ok).json(book);
+
+        // Başarılı işlem log'u
         await addLog({
             id: `updateBook-${Date.now()}`,
             message: `Book with ID ${book._id} updated successfully`,
@@ -118,6 +152,7 @@ exports.updateBook = async (req, res, next) => {
             next(new InternalServerErrorException(`Sunucu hatası: ${error.message}`)); // Hata sınıfını kullan
         }
 
+        // Hata log'u
         await addLog({
             id: `updateBook-${Date.now()}`,
             message: `Error updating book with ID ${req.params.id}: ${error.message}`,
@@ -137,6 +172,8 @@ exports.deleteBook = async (req, res, next) => {
         }
 
         res.status(HTTPStatusCode.NoContent).json({ message: 'Kitap silindi' });
+
+        // Başarılı işlem log'u
         await addLog({
             id: `deleteBook-${Date.now()}`,
             message: `Book with ID ${req.params.id} deleted successfully`,
@@ -146,6 +183,8 @@ exports.deleteBook = async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(new InternalServerErrorException(`Kitap silme hatası: ${error.message}`)); // Hata sınıfını kullan
+
+        // Hata log'u
         await addLog({
             id: `deleteBook-${Date.now()}`,
             message: `Error deleting book with ID ${req.params.id}: ${error.message}`,
@@ -165,9 +204,22 @@ exports.searchBooks = async (req, res, next) => {
     }
 
     try {
+        const cacheKey = `search:${query}`; // Arama sorgusuna özel cache anahtarı
+
+        // Redis cache kontrolü
+        const cachedResults = await redis.get(cacheKey);
+        if (cachedResults) {
+            console.log('Cache kullanıldı');
+            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedResults)); // Cache'ten arama sonuçlarını döndür
+        }
+        console.log('Cache bulunamadı, arama sonuçları veritabanından alınıyor...');
         const results = await search(query);
         res.status(HTTPStatusCode.Ok).json(results);
 
+        // Cache'e ekle
+        redis.setex(cacheKey, 3600, JSON.stringify(results)); // 1 saat boyunca cache'le
+
+        // Başarılı işlem log'u
         await addLog({
             id: `searchBooks-${Date.now()}`,
             message: `Search performed with query: ${query}`,
@@ -177,6 +229,8 @@ exports.searchBooks = async (req, res, next) => {
     } catch (error) {
         console.error(error);
         next(new InternalServerErrorException(`Arama hatası: ${error.message}`)); // Hata sınıfını kullan
+
+        // Hata log'u
         await addLog({
             id: `searchBooks-${Date.now()}`,
             message: `Error performing search with query: ${query} - ${error.message}`,
