@@ -66,6 +66,45 @@ describe('BookController Unit Tests', () => {
             sinon.assert.calledWith(res.json, createdBook);
         });
 
+        it('should handle errors while creating book', async () => {
+            const error = new Error('Some error');
+            req.body = { title: 'New Book', author: 'Author' };
+
+            const bookInstance = new Book(req.body);
+            sinon.stub(bookInstance, 'save').rejects(error);
+
+            await BookController.createBook(req, res, next);
+
+            sinon.assert.calledOnce(next);
+            sinon.assert.calledWith(next, sinon.match.instanceOf(InternalServerErrorException));
+        });
+
+        it('should handle validation errors and pass them to next middleware', async () => {
+            req.body = {}; // Eksik veriler
+            sandbox.stub(bookService, 'createBook').rejects(new Error('Validation error'));
+
+            await BookController.createBook(req, res, next);
+
+            // Özel hata sınıfını kontrol et
+            sinon.assert.calledOnce(next);
+            sinon.assert.calledWith(next, sinon.match.instanceOf(BadRequestException));
+        });
+    });
+
+    describe('updateBook', () => {
+        it('should update a book', async () => {
+            const bookId = new mongoose.Types.ObjectId().toString();
+            const updatedBook = { _id: bookId, title: 'Updated Book' };
+            req.params.id = bookId;
+            req.body = { title: 'Updated Book' };
+            sinon.stub(Book, 'findByIdAndUpdate').resolves(updatedBook);
+
+            await BookController.updateBook(req, res, next);
+
+            expect(res.status.calledWith(200)).toBe(true);
+            expect(res.json.calledWith(updatedBook)).toBe(true);
+        });
+
         it('should handle validation errors and pass them to next middleware', async () => {
             req.body = {}; // Eksik veriler
             sandbox.stub(bookService, 'createBook').rejects(new Error('Validation error'));
