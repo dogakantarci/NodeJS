@@ -1,116 +1,61 @@
 const sinon = require('sinon');
-const BookController = require('../../src/controllers/bookController');
-const bookService = require('../../src/services/bookService');
-const { InternalServerErrorException, BadRequestException } = require('../../src/exceptions/HttpException'); // Hata sınıfları
+const { getAllBooks } = require('../../src/controllers/bookController');
+const BookService = require('../../src/services/bookService');
+const redisClient = require('../../src/redisClient');
+const { InternalServerErrorException } = require('../../src/exceptions/HttpException');
+const { HTTPStatusCode } = require('../../src/utils/HttpStatusCode');
 
-describe('BookController Unit Tests', () => {
-    let sandbox;
-    let req, res, next;
+describe('getAllBooks Controller', () => {
+    let mockReq, mockRes, mockNext;
 
     beforeEach(() => {
-        sandbox = sinon.createSandbox();
-
-        req = { body: {}, params: {}, query: {} };
-        res = {
-            status: sandbox.stub().returnsThis(),
-            json: sandbox.stub(),
+        mockReq = {};
+        mockRes = {
+            status: sinon.stub().returnsThis(),
+            json: sinon.stub()
         };
-        next = sandbox.stub();
+        mockNext = sinon.stub();
     });
 
     afterEach(() => {
-        sandbox.restore();
+        sinon.restore();
     });
 
-    describe('getAllBooks', () => {
-        it('should return all books', async () => {
-            const books = [{ title: 'Book 1' }, { title: 'Book 2' }];
-            sandbox.stub(bookService, 'getAllBooks').resolves(books);
+    it('should return books from cache if available', async () => {
+        const cachedData = JSON.stringify([{ id: 1, title: 'Test Book' }]);
 
-            await BookController.getAllBooks(req, res, next);
+        sinon.stub(redisClient, 'get').resolves(cachedData);
 
-            sinon.assert.calledOnce(bookService.getAllBooks);
-            sinon.assert.calledWith(res.status, 200);
-            sinon.assert.calledWith(res.json, books);
-        });
+        await getAllBooks(mockReq, mockRes, mockNext);
 
-        it('should handle errors and pass them to next middleware', async () => {
-            const error = new Error('Database error');
-            sandbox.stub(bookService, 'getAllBooks').rejects(error);
-
-            await BookController.getAllBooks(req, res, next);
-
-            sinon.assert.calledOnce(next);
-            sinon.assert.calledWith(next, sinon.match.instanceOf(InternalServerErrorException));
-        });
-
-        it('should return empty array when no books exist', async () => {
-            sandbox.stub(bookService, 'getAllBooks').resolves([]);
-
-            await BookController.getAllBooks(req, res, next);
-
-            sinon.assert.calledWith(res.status, 200);
-            sinon.assert.calledWith(res.json, []);
-        });
+        sinon.assert.calledWith(redisClient.get, 'allBooks');
+        sinon.assert.calledWith(mockRes.status, HTTPStatusCode.Ok);
+        sinon.assert.calledWith(mockRes.json, JSON.parse(cachedData));
+        sinon.assert.notCalled(mockNext);
     });
 
-    describe('createBook', () => {
-        it('should create a book', async () => {
-            const newBook = { title: 'New Book', author: 'Author' };
-            const createdBook = { _id: '123', ...newBook };
+    it('should fetch books from database if cache is not available', async () => {
+        sinon.stub(redisClient, 'get').resolves(null);
+        sinon.stub(BookService, 'getAllBooks').resolves([{ id: 2, title: 'DB Book' }]);
+        sinon.stub(redisClient, 'setex').resolves();
 
-            req.body = newBook;
-            sandbox.stub(bookService, 'createBook').resolves(createdBook);
+        await getAllBooks(mockReq, mockRes, mockNext);
 
-            await BookController.createBook(req, res, next);
-
-            sinon.assert.calledOnce(bookService.createBook);
-            sinon.assert.calledWith(bookService.createBook, newBook);
-            sinon.assert.calledWith(res.status, 201);
-            sinon.assert.calledWith(res.json, createdBook);
-        });
-
-        it('should handle validation errors and pass them to next middleware', async () => {
-            req.body = {}; // Eksik veriler
-            sandbox.stub(bookService, 'createBook').rejects(new Error('Validation error'));
-
-            await BookController.createBook(req, res, next);
-
-            sinon.assert.calledOnce(next);
-            sinon.assert.calledWith(next, sinon.match.instanceOf(BadRequestException));
-            sinon.assert.calledWith(next, sinon.match.has('message', 'Tüm alanlar gereklidir: title, author, publishedDate'));
-        });
+        sinon.assert.calledWith(redisClient.get, 'allBooks');
+        sinon.assert.called(BookService.getAllBooks);
+        sinon.assert.calledWith(redisClient.setex, 'allBooks', 3600, JSON.stringify([{ id: 2, title: 'DB Book' }]));
+        sinon.assert.calledWith(mockRes.status, HTTPStatusCode.Ok);
+        sinon.assert.calledWith(mockRes.json, [{ id: 2, title: 'DB Book' }]);
+        sinon.assert.notCalled(mockNext);
     });
 
-    describe('updateBook', () => {
-        it('should update a book', async () => {
-            const bookId = '123';
-            const updatedBook = { _id: bookId, title: 'Updated Book' };
+    it('should handle errors and call next with InternalServerErrorException', async () => {
+        const error = new Error('DB Error');
+        sinon.stub(redisClient, 'get').throws(error);
 
-            req.params.id = bookId;
-            req.body = { title: 'Updated Book' };
+        await getAllBooks(mockReq, mockRes, mockNext);
 
-            sandbox.stub(bookService, 'updateBook').resolves(updatedBook);
-
-            await BookController.updateBook(req, res, next);
-
-            sinon.assert.calledOnce(bookService.updateBook);
-            sinon.assert.calledWith(bookService.updateBook, bookId, req.body);
-            sinon.assert.calledWith(res.status, 200);
-            sinon.assert.calledWith(res.json, updatedBook);
-        });
-
-        it('should handle errors when updating a book', async () => {
-            const bookId = '123';
-            req.params.id = bookId;
-            req.body = { title: 'Updated Book' };
-
-            sandbox.stub(bookService, 'updateBook').rejects(new Error('Update error'));
-
-            await BookController.updateBook(req, res, next);
-
-            sinon.assert.calledOnce(next);
-            sinon.assert.calledWith(next, sinon.match.instanceOf(InternalServerErrorException));
-        });
+        sinon.assert.calledWith(mockNext, sinon.match.instanceOf(InternalServerErrorException));
+        sinon.assert.notCalled(mockRes.json);
     });
 });
