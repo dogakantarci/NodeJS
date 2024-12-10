@@ -13,5 +13,8 @@ RUN npm install
 # Uygulama dosyalarını kopyala
 COPY . .
 
+# Uygulama portunu belirt
+EXPOSE 3000
+
 # Sunucu başlatmak için komut
 CMD ["npm", "start"]

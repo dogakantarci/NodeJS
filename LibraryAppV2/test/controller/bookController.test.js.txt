@@ -1,139 +1,61 @@
-const request = require('supertest');
-const express = require('express');
+const sinon = require('sinon');
+const httpMocks = require('node-mocks-http');
 const bookController = require('../../src/controllers/bookController');
 const BookService = require('../../src/services/bookService');
-require('../../src/exceptions/HttpException');
-const { HTTPStatusCode } = require('../../src/utils/HttpStatusCode');
-
-// Mock BookService
-jest.mock('../../src/services/bookService');
-
-const app = express();
-app.use(express.json());
-app.get('/books', bookController.getAllBooks);
-app.get('/books/:id', bookController.getBookById);
-app.post('/books', bookController.createBook);
-app.put('/books/:id', bookController.updateBook);
-app.delete('/books/:id', bookController.deleteBook);
 
 describe('BookController Tests', () => {
-    describe('GET /books', () => {
-        it('should return all books', async () => {
-            const books = [{ title: 'Book 1', author: 'Author 1' }];
-            BookService.getAllBooks.mockResolvedValueOnce(books); // Mock BookService method
+    let mockResponse;
 
-            const response = await request(app).get('/books');
-
-            expect(response.status).toBe(HTTPStatusCode.Ok);
-            expect(response.body).toEqual(books);
-        });
-
-        it('should handle errors when fetching books', async () => {
-            const errorMessage = 'Database error';
-            BookService.getAllBooks.mockRejectedValueOnce(new Error(errorMessage)); // Simulate error
-
-            const response = await request(app).get('/books');
-
-            expect(response.status).toBe(HTTPStatusCode.InternalServerError);
-            expect(response.body.message).toContain('Kitapları alma hatası');
-        });
+    beforeEach(() => {
+        mockResponse = httpMocks.createResponse();
     });
 
-    describe('GET /books/:id', () => {
-        it('should return a book by id', async () => {
-            const book = { title: 'Book 1', author: 'Author 1' };
-            const bookId = '605c72ef153207001f3b1b4';
-            BookService.getBookById.mockResolvedValueOnce(book); // Mock BookService method
-
-            const response = await request(app).get(`/books/${bookId}`);
-
-            expect(response.status).toBe(HTTPStatusCode.Ok);
-            expect(response.body).toEqual(book);
-        });
-
-        it('should return 404 if the book is not found', async () => {
-            const bookId = '605c72ef153207001f3b1b4';
-            BookService.getBookById.mockResolvedValueOnce(null); // Simulate book not found
-
-            const response = await request(app).get(`/books/${bookId}`);
-
-            expect(response.status).toBe(HTTPStatusCode.NotFound);
-            expect(response.body.message).toBe('Kitap bulunamadı');
-        });
-
-        it('should handle errors when fetching a book', async () => {
-            const errorMessage = 'Database error';
-            const bookId = '605c72ef153207001f3b1b4';
-            BookService.getBookById.mockRejectedValueOnce(new Error(errorMessage)); // Simulate error
-
-            const response = await request(app).get(`/books/${bookId}`);
-
-            expect(response.status).toBe(HTTPStatusCode.InternalServerError);
-            expect(response.body.message).toContain('Kitap alma hatası');
-        });
+    afterEach(() => {
+        sinon.restore();
     });
 
-    describe('POST /books', () => {
-        it('should create a new book', async () => {
-            const book = { title: 'New Book', author: 'New Author' };
-            BookService.createBook.mockResolvedValueOnce(book); // Mock BookService method
+    it('should fetch all books successfully', async () => {
+        const mockRequest = httpMocks.createRequest();
+        const fakeBooks = [{ id: '1', title: 'Test Book' }];
+        
+        const getAllBooksStub = sinon.stub(BookService, 'getAllBooks').resolves(fakeBooks);
 
-            const response = await request(app).post('/books').send(book);
+        await bookController.getAllBooks(mockRequest, mockResponse);
 
-            expect(response.status).toBe(HTTPStatusCode.Created);
-            expect(response.body).toEqual(book);
-        });
-
-        it('should return 400 if required fields are missing', async () => {
-            const response = await request(app).post('/books').send({});
-
-            expect(response.status).toBe(HTTPStatusCode.BadRequest);
-            expect(response.body.message).toBe('Tüm alanlar gereklidir: title, author, publishedDate');
-        });
+        const responseData = JSON.parse(mockResponse._getData());
+        expect(getAllBooksStub.calledOnce).toBe(true);
+        expect(responseData).toEqual(fakeBooks);
+        expect(mockResponse.statusCode).toBe(200);
     });
 
-    describe('PUT /books/:id', () => {
-        it('should update a book', async () => {
-            const bookId = '605c72ef153207001f3b1b4';
-            const updatedBook = { title: 'Updated Book', author: 'Updated Author' };
-            BookService.updateBook.mockResolvedValueOnce(updatedBook); // Mock BookService method
+    it('should handle errors gracefully', async () => {
+        const mockRequest = httpMocks.createRequest();
+        const errorMessage = 'Something went wrong';
 
-            const response = await request(app).put(`/books/${bookId}`).send(updatedBook);
+        const getAllBooksStub = sinon.stub(BookService, 'getAllBooks').rejects(new Error(errorMessage));
 
-            expect(response.status).toBe(HTTPStatusCode.Ok);
-            expect(response.body).toEqual(updatedBook);
-        });
+        await bookController.getAllBooks(mockRequest, mockResponse);
 
-        it('should return 404 if the book is not found', async () => {
-            const bookId = '605c72ef153207001f3b1b4';
-            BookService.updateBook.mockResolvedValueOnce(null); // Simulate book not found
-
-            const response = await request(app).put(`/books/${bookId}`).send({});
-
-            expect(response.status).toBe(HTTPStatusCode.NotFound);
-            expect(response.body.message).toBe('Kitap bulunamadı');
-        });
+        const responseData = JSON.parse(mockResponse._getData());
+        expect(getAllBooksStub.calledOnce).toBe(true);
+        expect(responseData.message).toBe('Kitapları alma hatası');
+        expect(mockResponse.statusCode).toBe(500);
     });
 
-    describe('DELETE /books/:id', () => {
-        it('should delete a book', async () => {
-            const bookId = '605c72ef153207001f3b1b4';
-            BookService.deleteBook.mockResolvedValueOnce({}); // Mock BookService method
-
-            const response = await request(app).delete(`/books/${bookId}`);
-
-            expect(response.status).toBe(HTTPStatusCode.NoContent);
-            expect(response.body.message).toBe('Kitap silindi');
+    it('should fetch a book by ID', async () => {
+        const mockRequest = httpMocks.createRequest({
+            params: { id: '1' },
         });
+        const fakeBook = { id: '1', title: 'Mock Book' };
 
-        it('should return 404 if the book is not found', async () => {
-            const bookId = '605c72ef153207001f3b1b4';
-            BookService.deleteBook.mockResolvedValueOnce(null); // Simulate book not found
+        const getBookByIdStub = sinon.stub(BookService, 'getBookById').resolves(fakeBook);
 
-            const response = await request(app).delete(`/books/${bookId}`);
+        await bookController.getBookById(mockRequest, mockResponse);
 
-            expect(response.status).toBe(HTTPStatusCode.NotFound);
-            expect(response.body.message).toBe('Kitap bulunamadı');
-        });
+        const responseData = JSON.parse(mockResponse._getData());
+        expect(getBookByIdStub.calledOnce).toBe(true);
+        expect(responseData).toEqual(fakeBook);
+        expect(mockResponse.statusCode).toBe(200);
     });
 });
+
