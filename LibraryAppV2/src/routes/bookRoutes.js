@@ -5,8 +5,10 @@ const router = express.Router();
 const bookController = require('../controllers/bookController');
 const { authenticateUser } = require('../middleware/authMiddleware');
 const { validateBook } = require('../middleware/validationMiddleware');
+const limiter = require('../middleware/rateLimiter'); // Middleware'ı dahil et
+
 // Kitapları alma
-router.get('/', bookController.getAllBooks);
+router.get('/', limiter, bookController.getAllBooks);
 
 //Filtreleme
 router.get('/filter', bookController.filterBooks);

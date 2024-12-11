@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const helmet = require('helmet');
 const { exec } = require('child_process'); // Komutları çalıştırmak için ekle
 const { errorHandler } = require('./middleware/errorHandler');
+const limiter = require('./middleware/rateLimiter'); // Middleware'ı dahil et
 
 const app = express();
 
