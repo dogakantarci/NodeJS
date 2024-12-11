@@ -198,18 +198,42 @@ exports.deleteBook = async (req, res, next) => {
 
 exports.searchBooks = async (req, res) => {
     try {
-        const { title, author } = req.query; // Query parametrelerini al
+        // Query parametrelerini al
+        const { query, author, startDate, endDate } = req.query;
 
-        // Eğer title veya author varsa, onları filtre olarak kullan
+        // Arama kriterlerini oluştur
         const searchCriteria = {};
-        if (title) {
-            searchCriteria.title = { $regex: title, $options: 'i' }; // Küçük/büyük harf duyarsız arama
-        }
-        if (author) {
-            searchCriteria.author = { $regex: author, $options: 'i' };
+
+        // query parametresi varsa, title ve author'da arama yap
+        if (query) {
+            searchCriteria.$or = [
+                { title: { $regex: new RegExp(query, 'i') } },  // Küçük/büyük harf duyarsız arama
+                { author: { $regex: new RegExp(query, 'i') } }  // Küçük/büyük harf duyarsız arama
+            ];
         }
 
-        // MongoDB'de arama yap
+        // Author parametresi varsa, sadece author'da filtreleme yap
+        if (author) {
+            searchCriteria.author = { $regex: new RegExp(author, 'i') };
+        }
+
+        // Filtreleme için tarih aralığı
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // Tarihlerin geçerli olup olmadığını kontrol et
+            if (!isNaN(start) && !isNaN(end)) {
+                searchCriteria.createdAt = {
+                    $gte: start, // Başlangıç tarihi
+                    $lte: end    // Bitiş tarihi
+                };
+            } else {
+                return res.status(400).json({ message: 'Geçersiz tarih formatı.' });
+            }
+        }
+
+        // MongoDB'de arama ve filtreleme yap
         const books = await Book.find(searchCriteria);
 
         // Eğer kitaplar bulunmazsa
