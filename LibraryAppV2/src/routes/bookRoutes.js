@@ -8,6 +8,9 @@ const { validateBook } = require('../middleware/validationMiddleware');
 // Kitapları alma
 router.get('/', bookController.getAllBooks);
 
+// Kitap arama
+router.get('/search', bookController.searchBooks);
+
 // Belirli bir kitabı alma
 router.get('/:id', bookController.getBookById);
 
@@ -20,7 +23,6 @@ router.put('/:id', authenticateUser, validateBook, bookController.updateBook);
 // Kitap silme 
 router.delete('/:id', authenticateUser, bookController.deleteBook);
 
-// Kitap arama
-router.get('/search', bookController.searchBooks);
+
 
 module.exports = router;

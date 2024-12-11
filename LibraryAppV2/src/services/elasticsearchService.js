@@ -62,23 +62,25 @@ async function addDocument(id, body) {
 async function search(query) {
     try {
         const result = await client.search({
-            index: 'books',
+            index: 'books',  // Aramanın yapılacağı indeks
             body: {
                 query: {
-                    match: { title: query } // Örneğin başlık içinde arama yapar
+                    match: { title: query } // 'title' alanında arama
                 }
             }
         });
 
-        // Result kontrolü ekleyin
-        if (!result.body || !result.body.hits) {
-            console.error('Arama sonucu boş döndü');
-            return [];
+        // Sonuçları kontrol et
+        if (!result.body || !result.body.hits || result.body.hits.total.value === 0) {
+            console.log('Arama sonucu boş döndü');
+            return []; // Eğer sonuç yoksa, boş dizi döndür
         }
-        return result.body.hits.hits;
+
+        console.log(`Toplam ${result.body.hits.total.value} sonuç bulundu`);
+        return result.body.hits.hits; // Arama sonuçlarını döndür
     } catch (error) {
         console.error('Arama hatası:', error.message, error.stack);
-        return [];
+        return []; // Hata durumunda boş dizi döndür
     }
 }
 

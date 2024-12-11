@@ -5,6 +5,8 @@ const { search } = require('../services/elasticsearchService');
 const { InternalServerErrorException, BadRequestException, NotFoundException } = require('../exceptions/HttpException');
 const { HTTPStatusCode } = require('../utils/HttpStatusCode');
 const redis = require('../redisClient');
+const Book = require('../models/Book'); // Kitap modelini içe aktar
+
 
 exports.getAllBooks = async (req, res, next) => {
     try {
@@ -194,48 +196,31 @@ exports.deleteBook = async (req, res, next) => {
     }
 };
 
-// Arama işlemi için
-exports.searchBooks = async (req, res, next) => {
-    const query = req.query.q; // Arama sorgusunu almak için
-
-    // Arama sorgusunun geçerliliğini kontrol et
-    if (!query) {
-        return next(new BadRequestException('Arama sorgusu gereklidir')); // Hata sınıfını kullan
-    }
-
+exports.searchBooks = async (req, res) => {
     try {
-        const cacheKey = `search:${query}`; // Arama sorgusuna özel cache anahtarı
+        const { title, author } = req.query; // Query parametrelerini al
 
-        // Redis cache kontrolü
-        const cachedResults = await redis.get(cacheKey);
-        if (cachedResults) {
-            console.log('Cache kullanıldı');
-            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedResults)); // Cache'ten arama sonuçlarını döndür
+        // Eğer title veya author varsa, onları filtre olarak kullan
+        const searchCriteria = {};
+        if (title) {
+            searchCriteria.title = { $regex: title, $options: 'i' }; // Küçük/büyük harf duyarsız arama
         }
-        console.log('Cache bulunamadı, arama sonuçları veritabanından alınıyor...');
-        const results = await search(query);
-        res.status(HTTPStatusCode.Ok).json(results);
+        if (author) {
+            searchCriteria.author = { $regex: author, $options: 'i' };
+        }
 
-        // Cache'e ekle
-        redis.setex(cacheKey, 3600, JSON.stringify(results)); // 1 saat boyunca cache'le
+        // MongoDB'de arama yap
+        const books = await Book.find(searchCriteria);
 
-        // Başarılı işlem log'u
-        await addLog({
-            id: `searchBooks-${Date.now()}`,
-            message: `Search performed with query: ${query}`,
-            level: 'info',
-            timestamp: new Date().toISOString()
-        });
+        // Eğer kitaplar bulunmazsa
+        if (!books || books.length === 0) {
+            return res.status(404).json({ message: 'Kitap bulunamadı.' });
+        }
+
+        // Bulunan kitapları döndür
+        res.status(200).json(books);
     } catch (error) {
-        console.error(error);
-        next(new InternalServerErrorException(`Arama hatası: ${error.message}`)); // Hata sınıfını kullan
-
-        // Hata log'u
-        await addLog({
-            id: `searchBooks-${Date.now()}`,
-            message: `Error performing search with query: ${query} - ${error.message}`,
-            level: 'error',
-            timestamp: new Date().toISOString()
-        });
+        console.error('Arama sırasında hata oluştu:', error);
+        res.status(500).json({ error: 'Arama sırasında bir hata oluştu.' });
     }
 };

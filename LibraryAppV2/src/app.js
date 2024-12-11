@@ -4,7 +4,7 @@ const morgan = require('morgan');  // Morgan'ı içe aktar
 const connectDB = require('./config/db');
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
-const searchRoutes = require('./routes/searchRoutes');
+//const searchRoutes = require('./routes/searchRoutes');
 const helmet = require('helmet');
 const { exec } = require('child_process'); // Komutları çalıştırmak için ekle
 const { errorHandler } = require('./middleware/errorHandler');
@@ -50,7 +50,7 @@ app.post('/github-webhook', (req, res) => {
 
 
 // Rotaları tanımlayalım
-app.use('/search', searchRoutes);  // Arama rotasını tanımlayın
+app.use('/search', bookRoutes);  // Arama rotasını tanımlayın
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
 
