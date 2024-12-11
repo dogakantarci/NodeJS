@@ -53,6 +53,7 @@ app.post('/github-webhook', (req, res) => {
 app.use('/search', bookRoutes);  // Arama rotasını tanımlayın
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
+app.use('/filter', bookRoutes);
 
 app.use(errorHandler);
 

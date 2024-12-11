@@ -8,6 +8,9 @@ const { validateBook } = require('../middleware/validationMiddleware');
 // Kitapları alma
 router.get('/', bookController.getAllBooks);
 
+//Filtreleme
+router.get('/filter', bookController.filterBooks);
+
 // Kitap arama
 router.get('/search', bookController.searchBooks);
 

@@ -198,8 +198,7 @@ exports.deleteBook = async (req, res, next) => {
 
 exports.searchBooks = async (req, res) => {
     try {
-        // Query parametrelerini al
-        const { query, author, startDate, endDate } = req.query;
+        const { query } = req.query;
 
         // Arama kriterlerini oluştur
         const searchCriteria = {};
@@ -212,28 +211,7 @@ exports.searchBooks = async (req, res) => {
             ];
         }
 
-        // Author parametresi varsa, sadece author'da filtreleme yap
-        if (author) {
-            searchCriteria.author = { $regex: new RegExp(author, 'i') };
-        }
-
-        // Filtreleme için tarih aralığı
-        if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-
-            // Tarihlerin geçerli olup olmadığını kontrol et
-            if (!isNaN(start) && !isNaN(end)) {
-                searchCriteria.createdAt = {
-                    $gte: start, // Başlangıç tarihi
-                    $lte: end    // Bitiş tarihi
-                };
-            } else {
-                return res.status(400).json({ message: 'Geçersiz tarih formatı.' });
-            }
-        }
-
-        // MongoDB'de arama ve filtreleme yap
+        // MongoDB'de arama yap
         const books = await Book.find(searchCriteria);
 
         // Eğer kitaplar bulunmazsa
@@ -246,5 +224,49 @@ exports.searchBooks = async (req, res) => {
     } catch (error) {
         console.error('Arama sırasında hata oluştu:', error);
         res.status(500).json({ error: 'Arama sırasında bir hata oluştu.' });
+    }
+};
+
+exports.filterBooks = async (req, res) => {
+    try {
+        const { author, startDate, endDate } = req.query;
+
+        // Filtreleme için kullanılacak kriterler
+        const filterCriteria = {};
+
+        // Author parametresi varsa, sadece author'da filtreleme yap
+        if (author) {
+            filterCriteria.author = { $regex: new RegExp(author, 'i') };
+        }
+
+        // Filtreleme için tarih aralığı
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+
+            // Tarihlerin geçerli olup olmadığını kontrol et
+            if (!isNaN(start) && !isNaN(end)) {
+                filterCriteria.createdAt = {
+                    $gte: start, // Başlangıç tarihi
+                    $lte: end    // Bitiş tarihi
+                };
+            } else {
+                return res.status(400).json({ message: 'Geçersiz tarih formatı.' });
+            }
+        }
+
+        // MongoDB'de filtreleme yap
+        const books = await Book.find(filterCriteria);
+
+        // Eğer kitaplar bulunmazsa
+        if (!books || books.length === 0) {
+            return res.status(404).json({ message: 'Kitap bulunamadı.' });
+        }
+
+        // Bulunan kitapları döndür
+        res.status(200).json(books);
+    } catch (error) {
+        console.error('Filtreleme sırasında hata oluştu:', error);
+        res.status(500).json({ error: 'Filtreleme sırasında bir hata oluştu.' });
     }
 };
