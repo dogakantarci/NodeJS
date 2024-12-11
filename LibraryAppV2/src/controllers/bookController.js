@@ -1,7 +1,7 @@
 const BookService = require('../services/bookService');
 const { addLog } = require('../services/elasticsearchService');
 const mongoose = require('mongoose');
-const { search } = require('../services/elasticsearchService');
+//const { search } = require('../services/elasticsearchService');
 const { InternalServerErrorException, BadRequestException, NotFoundException } = require('../exceptions/HttpException');
 const { HTTPStatusCode } = require('../utils/HttpStatusCode');
 const redis = require('../redisClient');
