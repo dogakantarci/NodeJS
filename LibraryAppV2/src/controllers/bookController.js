@@ -14,10 +14,14 @@ exports.getAllBooks = async (req, res, next) => {
         const limit = parseInt(req.query.limit) || 20; // Varsayılan limit 20 olacak
         const offset = (page - 1) * limit; // Sayfa başına kaç veri alacağımızı hesapla
 
-        console.debug(`Pagination parameters: page=${page}, limit=${limit}, offset=${offset}`);
+        // Sıralama parametrelerini al
+        const sortBy = req.query.sortBy || 'createdAt'; // Varsayılan sıralama alanı
+        const sortOrder = req.query.sortOrder || 'ASC'; // Varsayılan sıralama türü (ASC)
 
-        // Cache anahtarını dinamik oluştur
-        const cacheKey = `allBooks:page=${page}:limit=${limit}`;
+        console.debug(`Sorting parameters: sortBy=${sortBy}, sortOrder=${sortOrder}`);
+
+        // Cache anahtarını oluştur
+        const cacheKey = `allBooks:page=${page}:limit=${limit}:sortBy=${sortBy}:sortOrder=${sortOrder}`;
 
         // Redis cache kontrolü
         const cachedBooks = await redis.get(cacheKey);
@@ -30,10 +34,11 @@ exports.getAllBooks = async (req, res, next) => {
         console.debug(`Cache miss for ${cacheKey}. Fetching from database...`);
         console.log('Cache bulunamadı, veritabanından alınıyor...');
 
-        // Sequelize ile kitapları al
+        // Sequelize ile kitapları al (sıralama dahil)
         const books = await Book.findAll({
             limit: limit,      // Limiti ayarla
             offset: offset,    // Sayfalama için offset
+            order: [[sortBy, sortOrder.toUpperCase()]] // Sıralama
         });
         console.debug(`Fetched ${books.length} books from database.`);
 
@@ -46,7 +51,7 @@ exports.getAllBooks = async (req, res, next) => {
         // Başarılı işlem log'u
         await addLog({
             id: `getAllBooks-${Date.now()}`,
-            message: `Books fetched successfully for page=${page} and limit=${limit}`,
+            message: `Books fetched successfully for page=${page}, limit=${limit}, sortBy=${sortBy}, sortOrder=${sortOrder}`,
             level: 'info',
             timestamp: new Date().toISOString()
         });
@@ -64,6 +69,7 @@ exports.getAllBooks = async (req, res, next) => {
         });
     }
 };
+
 
 
 exports.getBookById = async (req, res, next) => {
