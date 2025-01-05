@@ -1,14 +1,33 @@
-// src/config/db.js
-const mongoose = require('mongoose');
+// config/db.js
+const { Sequelize } = require('sequelize');
 
-const connectDB = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log('MongoDB bağlandı');
-    } catch (err) {
-        console.error('MongoDB bağlantı hatası:', err);
-        process.exit(1);
-    }
+// PostgreSQL veritabanına bağlanma
+const sequelize = new Sequelize({
+  dialect: 'postgres', // Veritabanı türü
+  host: 'my-postgres', // PostgreSQL hostu
+  username: 'library_user',
+  password: 'library_password',
+  database: 'library',
+});
+
+// Modelleri import et
+const User = require('../models/User');
+const Book = require('../models/Book');
+
+// Bağlantıyı ve senkronizasyonu test et
+const testConnection = async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('PostgreSQL bağlantısı başarılı!');
+
+    // Tabloları senkronize et
+    await sequelize.sync({ force: false });
+    console.log('Veritabanı senkronize edildi');
+  } catch (error) {
+    console.error('Bağlantı veya senkronizasyon hatası:', error.message);
+  }
 };
 
-module.exports = connectDB;
+testConnection();
+
+module.exports = {sequelize};

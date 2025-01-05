@@ -1,17 +1,18 @@
 // src/services/authService.js
+const { sequelize } = require('../config/db');  // Sequelize instance'ını doğru içe aktarın
+const User = require('../models/User')(sequelize); 
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+require('dotenv').config();
 
 exports.register = async (userData) => {
-    const user = new User(userData);
-    await user.save();
-    return generateToken(user._id);
+    const user = await User.create(userData); // Yeni kullanıcıyı kaydet
+    return generateToken(user.id);  // Kullanıcı ID'si ile token oluştur
 };
 
 exports.login = async (username, password) => {
-    const user = await User.findOne({ username });
-    if (user && await user.comparePassword(password)) {
-        return generateToken(user._id);
+    const user = await User.findOne({ where: { username } });  // Kullanıcıyı username ile bul
+    if (user && await user.comparePassword(password)) {  // Şifreyi doğrula
+        return generateToken(user.id);  // Geçerli kullanıcıyı JWT ile token oluştur
     } else {
         throw new Error('Invalid username or password');
     }

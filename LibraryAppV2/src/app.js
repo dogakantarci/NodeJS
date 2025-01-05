@@ -1,18 +1,27 @@
 //app.js
 const express = require('express');
 const morgan = require('morgan');  // Morgan'ı içe aktar
-const connectDB = require('./config/db');
+const sequelize = require('./config/db'); // Veritabanı bağlantısı
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 //const searchRoutes = require('./routes/searchRoutes');
 const helmet = require('helmet');
 const { exec } = require('child_process'); // Komutları çalıştırmak için ekle
 const { errorHandler } = require('./middleware/errorHandler');
-const limiter = require('./middleware/rateLimiter'); // Middleware'ı dahil et
 
 const app = express();
 
-connectDB(); // Veritabanına bağlan
+// Veritabanı senkronizasyonu
+const syncDatabase = async () => {
+    try {
+      await sequelize.sync({ force: false });  // `force: false` ile tablolara zarar verilmez
+      console.log('Veritabanı senkronize edildi.');
+    } catch (error) {
+      console.error('Senkronizasyon hatası:', error);
+    }
+  };
+  
+  syncDatabase();
 
 app.use(morgan('combined'));  // 'combined' formatında loglama yapar
 

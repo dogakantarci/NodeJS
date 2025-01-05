@@ -1,35 +1,47 @@
-const mongoose = require('mongoose');
+const { Model, DataTypes } = require('sequelize');
 const bcrypt = require('bcryptjs');
 
-const userSchema = new mongoose.Schema({
-    username: {
-        type: String,
-        required: true,
+module.exports = (sequelize) => {
+  class User extends Model {
+    // Şifreyi doğrulama metodu
+    async comparePassword(enteredPassword) {
+      return await bcrypt.compare(enteredPassword, this.password);
+    }
+  }
+
+  User.init(
+    {
+      username: {
+        type: DataTypes.STRING,
+        allowNull: false,
         unique: true,
-        trim: true
+        validate: {
+          notEmpty: true,
+        },
+      },
+      password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        validate: {
+          notEmpty: true,
+        },
+      },
     },
-    password: {
-        type: String,
-        required: true
+    {
+      sequelize,  // sequelize instance'ı burada kullanılıyor
+      modelName: 'User',
+      timestamps: true, // createdAt ve updatedAt alanları otomatik eklenir
+      hooks: {
+        async beforeSave(user) {
+          // Eğer password değiştiyse, hash'leme işlemi yapılır
+          if (user.changed('password')) {
+            const salt = await bcrypt.genSalt(10);
+            user.password = await bcrypt.hash(user.password, salt);
+          }
+        },
+      },
     }
-}, {
-    timestamps: true
-});
+  );
 
-// Şifreyi kaydetmeden önce hashleme
-userSchema.pre('save', async function(next) {
-    if (!this.isModified('password')) {
-        return next(); // return ifadesi eklenmeli
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-});
-
-// Şifreyi doğrulamak için metot
-userSchema.methods.comparePassword = async function(enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+  return User;
 };
-
-const User = mongoose.model('User', userSchema);
-module.exports = User;

@@ -1,5 +1,4 @@
-// src/models/Book.js
-const mongoose = require('mongoose');
+const { Model, DataTypes } = require('sequelize');
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 const timezone = require('dayjs/plugin/timezone');
@@ -7,35 +6,58 @@ const timezone = require('dayjs/plugin/timezone');
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
-// Kullanıcımızın saat dilimini çekiyoruz
-const userTimeZone = dayjs.tz.guess();
+// Kullanıcının saat dilimini al
+const userTimeZone = dayjs.tz.guess() || 'UTC';
 
 // Zaman dilimini UTC'ye göre dönüştür
 function convertUTCToLocal(date) {
-    // Eğer date tanımlı değilse null döndür
-    if (!date) return null;
-    return dayjs(date).tz(userTimeZone).format();  
-// Kullanıcının saat dilimine çevirir
+  if (!date) return null;
+  return dayjs(date).tz(userTimeZone).format();  // Kullanıcının saat dilimine dönüştür
 }
 
-const bookSchema = new mongoose.Schema({
-    title: { type: String, required: true, unique: true}, 
-    author: { type: String, required: true },
-    publishedDate: { type: Date },
-    genre: { type: String }
-}, {
-    timestamps: true,
-    toJSON: { getters: true }
-});
+module.exports = (sequelize) => {  // sequelize parametresini al
+  class Book extends Model {
+    toJSON() {
+      const attributes = { ...this.get() };
+      // createdAt ve updatedAt'ı kullanıcı saat dilimine çevir
+      if (attributes.createdAt) {
+        attributes.createdAt = convertUTCToLocal(attributes.createdAt);
+      }
+      if (attributes.updatedAt) {
+        attributes.updatedAt = convertUTCToLocal(attributes.updatedAt);
+      }
+      return attributes;
+    }
+  }
 
-// Getter fonksiyonları
-bookSchema.path('createdAt').get(function(date) {
-    return convertUTCToLocal(date);
-});
+  Book.init(
+    {
+      title: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+      },
+      author: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      publishedDate: {
+        type: DataTypes.DATE,
+        allowNull: true, // Yazarın belirtmediği bir tarih olabilir
+      },
+      genre: {
+        type: DataTypes.STRING,
+        allowNull: true, // Zorunlu değil
+      },
+    },
+    {
+      sequelize, // sequelize nesnesi burada kullanılmalı
+      modelName: 'Book',
+      timestamps: true,
+      createdAt: 'createdAt',
+      updatedAt: 'updatedAt',
+    }
+  );
 
-bookSchema.path('updatedAt').get(function(date) {
-    return convertUTCToLocal(date);
-});
-
-const Book = mongoose.model('Book', bookSchema);
-module.exports = Book;
+  return Book;
+};

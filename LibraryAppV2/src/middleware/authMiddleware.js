@@ -1,26 +1,20 @@
-// src/middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');  // Kullanıcı modelini ekleyin
+const { sequelize } = require('../config/db');
+const User = require('../models/User')(sequelize); // Kullanıcı modelini ekleyin
 
 // Hata mesajlarını düzenlemek için özel bir fonksiyon
 const handleTokenError = (error, res) => {
     if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({ message: 'Token has expired' });
-    } else if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({ message: 'Invalid token' });
-    } else {
-      return res.status(401).json({ message: 'Not authorized, token failed' });
+        return res.status(401).json({ message: 'Token has expired' });
     }
-  };
+    if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ message: 'Invalid token' });
+    }
+    return res.status(401).json({ message: 'Not authorized, token failed' });
+};
 
 exports.authenticateUser = async (req, res, next) => {
     let token;
-
-      // Çevresel değişken kontrolü
-    if (!process.env.JWT_SECRET) {
-        return res.status(500).json({ message: "JWT secret is not defined." });
-  }
-
 
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
         try {
@@ -31,23 +25,24 @@ exports.authenticateUser = async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
             // Kullanıcıyı bulma
-            req.user = await User.findById(decoded.id).select('-password');
+            const user = await User.findByPk(decoded.id, {
+                attributes: ['id', 'username'], // Sadece gereken alanları seç
+            });
 
             // Kullanıcı bulunamazsa
-            if (!req.user) {
+            if (!user) {
                 return res.status(404).json({ message: 'User not found' });
-      }
+            }
 
-
+            req.user = user; // Kullanıcıyı `req` objesine ata
             next();
-            
-    }       catch (error) {
+        } catch (error) {
             // Token doğrulama hatalarını işle
-            console.error(error);
+            console.error('Token Error:', error);
             return handleTokenError(error, res);
+        }
+    } else {
+        // Token yoksa
+        return res.status(401).json({ message: 'Not authorized, no token' });
     }
-  } else {
-    // Token yoksa
-    return res.status(401).json({ message: 'Not authorized, no token' });
-  }
 };

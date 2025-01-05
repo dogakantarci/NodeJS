@@ -7,11 +7,14 @@ services:
     depends_on:
       - my-redis
       - my-elasticsearch
-      - my-mongodb
+      - my-postgres  # PostgreSQL servisini burada ekliyoruz
     environment:
       REDIS_HOST: my-redis
       ES_HOST: my-elasticsearch
-      MONGO_URI: mongodb+srv://dogakantarci:MongoDB1.@cluster.sdjbxqz.mongodb.net/
+      DB_HOST: my-postgres  # PostgreSQL bağlantısı için ortam değişkeni
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_NAME: mydb
     networks:
       - app-network  # Ağı belirtin
     dns:
@@ -33,6 +36,20 @@ services:
     networks:
       - app-network  # Ağı belirtin
 
+  my-postgres:  # PostgreSQL servisini ekliyoruz
+    image: postgres:latest
+    container_name: my-postgres
+    environment:
+      - POSTGRES_USER=library_user
+      - POSTGRES_PASSWORD=library_password
+      - POSTGRES_DB=library
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network  # Ağı belirtin
+    volumes:
+      - pgdata:/var/lib/postgresql/data  # Verilerin kalıcı olması için volume kullanıyoruz
+
   web:
     image: nginx
     volumes:
@@ -44,15 +61,9 @@ services:
     networks:
       - app-network  # Ağı belirtin
 
-  my-mongodb:
-    image: mongo:latest
-    ports:
-      - "27017:27017"
-    volumes:
-      - ./data/db:/data/db  # Verilerinizi yerel diske kaydedebilirsiniz (isteğe bağlı)
-    networks:
-      - app-network  # Ağı belirtin
-
 networks:
   app-network:  # Ağı burada tanımlayın
     driver: bridge
+
+volumes:
+  pgdata:  # PostgreSQL verilerini kalıcı hale getirecek volume
