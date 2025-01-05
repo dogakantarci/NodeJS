@@ -10,10 +10,6 @@ const sequelize = new Sequelize({
   database: 'library',
 });
 
-// Modelleri import et
-const User = require('../models/User');
-const Book = require('../models/Book');
-
 // Bağlantıyı ve senkronizasyonu test et
 const testConnection = async () => {
   try {
