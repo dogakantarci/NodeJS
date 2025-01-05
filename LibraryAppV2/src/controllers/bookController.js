@@ -9,33 +9,50 @@ const { Op } = require('sequelize');
 
 exports.getAllBooks = async (req, res, next) => {
     try {
-        const cacheKey = 'allBooks';
+        // Sayfalama parametrelerini al
+        const page = parseInt(req.query.page) || 1;  // Varsayılan sayfa 1 olacak
+        const limit = parseInt(req.query.limit) || 20; // Varsayılan limit 20 olacak
+        const offset = (page - 1) * limit; // Sayfa başına kaç veri alacağımızı hesapla
+
+        console.debug(`Pagination parameters: page=${page}, limit=${limit}, offset=${offset}`);
+
+        // Cache anahtarını dinamik oluştur
+        const cacheKey = `allBooks:page=${page}:limit=${limit}`;
 
         // Redis cache kontrolü
         const cachedBooks = await redis.get(cacheKey);
         if (cachedBooks) {
+            console.debug(`Cache hit for ${cacheKey}`);
             console.log('Cache kullanıldı');
-            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks)); 
+            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks));
         }
 
+        console.debug(`Cache miss for ${cacheKey}. Fetching from database...`);
         console.log('Cache bulunamadı, veritabanından alınıyor...');
-        
+
         // Sequelize ile kitapları al
-        const books = await Book.findAll(); // Sequelize ile veri çekiyoruz
+        const books = await Book.findAll({
+            limit: limit,      // Limiti ayarla
+            offset: offset,    // Sayfalama için offset
+        });
+        console.debug(`Fetched ${books.length} books from database.`);
+
         res.status(HTTPStatusCode.Ok).json(books);
 
         // Cache'e ekle
         redis.setex(cacheKey, 3600, JSON.stringify(books));
+        console.debug(`Books cached successfully for ${cacheKey}.`);
 
         // Başarılı işlem log'u
         await addLog({
             id: `getAllBooks-${Date.now()}`,
-            message: 'All books fetched successfully',
+            message: `Books fetched successfully for page=${page} and limit=${limit}`,
             level: 'info',
             timestamp: new Date().toISOString()
         });
     } catch (error) {
         console.error(error);
+        console.debug(`Error occurred in getAllBooks: ${error.stack}`);
         next(new InternalServerErrorException('Kitapları alma hatası', error.message));
 
         // Hata log'u
@@ -47,6 +64,7 @@ exports.getAllBooks = async (req, res, next) => {
         });
     }
 };
+
 
 exports.getBookById = async (req, res, next) => {
     const { id } = req.params;
