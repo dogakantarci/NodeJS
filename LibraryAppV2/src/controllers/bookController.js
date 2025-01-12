@@ -31,10 +31,9 @@ exports.getAllBooks = async (req, res, next) => {
             return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks));
         }
 
-        console.debug(`Cache miss for ${cacheKey}. Fetching from database...`);
         console.log('Cache bulunamadı, veritabanından alınıyor...');
 
-        // Sequelize ile kitapları al (sıralama dahil)
+        // Sequelize ile kitapları al
         const books = await Book.findAll({
             limit: limit,      // Limiti ayarla
             offset: offset,    // Sayfalama için offset
