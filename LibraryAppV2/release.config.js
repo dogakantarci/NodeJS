@@ -4,7 +4,6 @@ module.exports = {
       "@semantic-release/commit-analyzer", // Commit mesajlarını analiz eder.
       "@semantic-release/release-notes-generator", // Release notları oluşturur.
       "@semantic-release/changelog", // Changelog dosyasını günceller.
-      "@semantic-release/npm", // NPM paketi olarak yayın yapar (isteğe bağlı).
       [
         "@semantic-release/git",
         {
