@@ -11,9 +11,10 @@ exports.getAllBooks = async (req, res, next) => {
     try {
         // Sayfalama parametrelerini al
         const page = parseInt(req.query.page) || 1;  // Varsayılan sayfa 1 olacak
-        const limit = parseInt(req.query.limit) || 20; // Varsayılan limit 20 olacak
+        const limit = parseInt(req.query.limit) || 100; // Varsayılan limit 20 olacak
         const offset = (page - 1) * limit; // Sayfa başına kaç veri alacağımızı hesapla
 
+        
         // Sıralama parametrelerini al
         const sortBy = req.query.sortBy || 'createdAt'; // Varsayılan sıralama alanı
         const sortOrder = req.query.sortOrder || 'ASC'; // Varsayılan sıralama türü (ASC)
