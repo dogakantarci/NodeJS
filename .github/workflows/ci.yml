@@ -16,6 +16,8 @@ jobs:
     # Kodun checkout edilmesi
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        path: ./NodeJS/LibraryAppV2
 
     # Node.js kurulumunun yapılması
     - name: Set up Node.js
