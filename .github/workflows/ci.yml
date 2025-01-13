@@ -16,8 +16,6 @@ jobs:
     # Kodun checkout edilmesi
     - name: Checkout code
       uses: actions/checkout@v3
-      with:
-        path: ./NodeJS/LibraryAppV2
 
     # Node.js kurulumunun yapılması
     - name: Set up Node.js
@@ -28,14 +26,17 @@ jobs:
     # Bağımlılıkların kurulması
     - name: Install dependencies
       run: npm install
+      working-directory: ./NodeJS/LibraryAppV2  # Burada doğru dizini belirtiyoruz
 
     # Testlerin çalıştırılması
     - name: Run tests
       run: npm test
+      working-directory: ./NodeJS/LibraryAppV2  # Testlerin doğru dizinde çalışması için
 
     # Build işlemi (opsiyonel, projenizde bir build aşaması varsa)
     - name: Build project
-      run: npm run build  # Eğer build aşaması yoksa bu satırı çıkarabilirsiniz
+      run: npm run build
+      working-directory: ./NodeJS/LibraryAppV2  # Build işlemi için doğru dizin
 
     # NPM authentication yapılandırması
     - name: Set up NPM authentication
@@ -52,6 +53,7 @@ jobs:
         CI: true  # Bu ortam değişkeni dry-run modunu geçer
         GH_TOKEN: ${{ secrets.GH_TOKEN }} # GitHub token ile erişim sağlanır
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # NPM token ile paketleri dağıtabilirsiniz
+      working-directory: ./NodeJS/LibraryAppV2  # Semantic-release'ın doğru dizinde çalışması için
 
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
