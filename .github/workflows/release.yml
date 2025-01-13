@@ -10,25 +10,33 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Kodun checkout edilmesi
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # Checkout işlemi için v3 sürümünü kullanalım
 
+      # Node.js kurulumunun yapılması
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '20'  # Kullanmakta olduğun Node.js sürümünü buraya yaz
 
+      # Bağımlılıkların kurulması (npm ci komutu kullanılıyor)
       - name: Install dependencies
         run: npm ci
+        working-directory: ./LibraryAppV2  # Doğru dizin burada belirtilecek
 
+      # NPM_TOKEN ve GH_TOKEN çevre değişkenlerinin ayarlanması
       - name: Set up NPM_TOKEN and GH_TOKEN
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: echo "Tokens are set."
 
+      # Semantic-release çalıştırılması
       - name: Run semantic-release
         run: npx semantic-release
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        working-directory: ./LibraryAppV2  # Semantic-release için doğru dizin
+
