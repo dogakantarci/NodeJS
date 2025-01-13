@@ -34,9 +34,9 @@ jobs:
       working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # Build işlemi (opsiyonel, projenizde bir build aşaması varsa)
-   # - name: Build project
-    #  run: npm run build
-   #   working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
+    - name: Build project
+      run: npm run build
+      working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # NPM authentication yapılandırması
     - name: Set up NPM authentication
@@ -55,8 +55,10 @@ jobs:
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # NPM token ile paketleri dağıtabilirsiniz
       working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
+    # Deploy işlemleri (prodüksiyon)
     - name: Deploy to Production
-      if: github.ref == 'refs/heads/main'
+      if: github.ref == 'refs/heads/main' && success() # GitHub Action koşulunu doğru yapalım
       run: |
         echo "Deploying to production..."
-        # deploy işlemleri
+        # Deploy komutlarını buraya ekleyin
+        # Örnek: ssh -i /path/to/your/private_key user@server "deploy-command"
