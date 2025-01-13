@@ -26,17 +26,17 @@ jobs:
     # Bağımlılıkların kurulması
     - name: Install dependencies
       run: npm install
-      working-directory: ./NodeJS/LibraryAppV2  # Burada doğru dizini belirtiyoruz
+      working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # Testlerin çalıştırılması
     - name: Run tests
       run: npm test
-      working-directory: ./NodeJS/LibraryAppV2  # Testlerin doğru dizinde çalışması için
+      working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # Build işlemi (opsiyonel, projenizde bir build aşaması varsa)
     - name: Build project
       run: npm run build
-      working-directory: ./NodeJS/LibraryAppV2  # Build işlemi için doğru dizin
+      working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # NPM authentication yapılandırması
     - name: Set up NPM authentication
@@ -53,7 +53,7 @@ jobs:
         CI: true  # Bu ortam değişkeni dry-run modunu geçer
         GH_TOKEN: ${{ secrets.GH_TOKEN }} # GitHub token ile erişim sağlanır
         NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # NPM token ile paketleri dağıtabilirsiniz
-      working-directory: ./NodeJS/LibraryAppV2  # Semantic-release'ın doğru dizinde çalışması için
+      working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'
