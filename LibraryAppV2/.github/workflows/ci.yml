@@ -13,26 +13,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # Kodun checkout edilmesi
     - name: Checkout code
       uses: actions/checkout@v3
 
+    # Node.js kurulumunun yapılması
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '16'  # Proje için kullandığın Node.js versiyonunu burada belirt
+        node-version: '16'  # Proje için kullandığınız Node.js versiyonunu burada belirtin
 
+    # Bağımlılıkların kurulması
     - name: Install dependencies
       run: npm install
 
+    # Testlerin çalıştırılması
     - name: Run tests
       run: npm test
 
+    # Build işlemi (opsiyonel, projenizde bir build aşaması varsa)
     - name: Build project
-      run: npm run build  # Eğer build aşaması varsa, yoksa bu satırı çıkarabilirsin
+      run: npm run build  # Eğer build aşaması yoksa bu satırı çıkarabilirsiniz
 
+    # NPM authentication yapılandırması
+    - name: Set up NPM authentication
+      run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
+    # GitHub token'ının ortam değişkenine eklenmesi
+    - name: Set up GitHub authentication
+      run: echo "GH_TOKEN=${{ secrets.GH_TOKEN }}" >> $GITHUB_ENV
+
+    # Semantic-release'ın çalıştırılması
+    - name: Run semantic-release
+      run: npx semantic-release
+      env:
+        CI: true  # Bu ortam değişkeni dry-run modunu geçer
+
+    # Üretim sunucusuna deploy işlemi (örnek)
     - name: Deploy to Production
       if: github.ref == 'refs/heads/main'  # Sadece main branch'e push yapıldığında çalışır
       run: |
         echo "Deploying to production..."
-        # Buraya prod sunucuna deploy işlemleri için komutlar ekleyebilirsin
-        # Örneğin SSH ile bağlanıp, sunucuda gerekli komutları çalıştırabilirsin
+        # Buraya prod sunucunuza deploy işlemleri için komutlar ekleyebilirsiniz
+        # Örneğin SSH ile bağlanıp, sunucuda gerekli komutları çalıştırabilirsiniz
