@@ -34,9 +34,9 @@ jobs:
       working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # Build işlemi (opsiyonel, projenizde bir build aşaması varsa)
-    - name: Build project
-      run: npm run build
-      working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
+   # - name: Build project
+    #  run: npm run build
+   #   working-directory: ./LibraryAppV2  # NodeJS/LibraryAppV2 dizini
 
     # NPM authentication yapılandırması
     - name: Set up NPM authentication
