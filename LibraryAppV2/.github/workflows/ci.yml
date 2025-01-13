@@ -48,11 +48,3 @@ jobs:
       run: npx semantic-release
       env:
         CI: true  # Bu ortam değişkeni dry-run modunu geçer
-
-    # Üretim sunucusuna deploy işlemi (örnek)
-    - name: Deploy to Production
-      if: github.ref == 'refs/heads/main'  # Sadece main branch'e push yapıldığında çalışır
-      run: |
-        echo "Deploying to production..."
-        # Buraya prod sunucunuza deploy işlemleri için komutlar ekleyebilirsiniz
-        # Örneğin SSH ile bağlanıp, sunucuda gerekli komutları çalıştırabilirsiniz
