@@ -48,3 +48,11 @@ jobs:
       run: npx semantic-release
       env:
         CI: true  # Bu ortam değişkeni dry-run modunu geçer
+        GH_TOKEN: ${{ secrets.GH_TOKEN }} # GitHub token ile erişim sağlanır
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # NPM token ile paketleri dağıtabilirsiniz
+
+    - name: Deploy to Production
+      if: github.ref == 'refs/heads/main'
+      run: |
+        echo "Deploying to production..."
+        # deploy işlemleri
