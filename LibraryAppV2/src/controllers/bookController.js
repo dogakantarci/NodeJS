@@ -7,14 +7,20 @@ const { HTTPStatusCode } = require('../utils/HttpStatusCode');
 const redis = require('../redisClient');
 const { Op } = require('sequelize');
 
-exports.getAllBooks = async (req, res, next) => {
+/* exports.getAllBooks = async (req, res, next) => {
     try {
         // Sayfalama parametrelerini al
         const page = parseInt(req.query.page) || 1;  // Varsayılan sayfa 1 olacak
-        const limit = parseInt(req.query.limit) || 100; // Varsayılan limit 20 olacak
+        let limit = parseInt(req.query.limit) || 100; // Varsayılan limit 100 olacak
+
+        // Limitin aşırı büyük olmasını engelle
+        const MAX_LIMIT = 100; // Maksimum alınabilecek veri sayısı
+        if (limit > MAX_LIMIT) {
+            return next(new BadRequestException(`Limit en fazla ${MAX_LIMIT} olabilir.`));
+        }
+
         const offset = (page - 1) * limit; // Sayfa başına kaç veri alacağımızı hesapla
 
-        
         // Sıralama parametrelerini al
         const sortBy = req.query.sortBy || 'createdAt'; // Varsayılan sıralama alanı
         const sortOrder = req.query.sortOrder || 'ASC'; // Varsayılan sıralama türü (ASC)
@@ -42,11 +48,12 @@ exports.getAllBooks = async (req, res, next) => {
         });
         console.debug(`Fetched ${books.length} books from database.`);
 
-        res.status(HTTPStatusCode.Ok).json(books);
-
-        // Cache'e ekle
-        redis.setex(cacheKey, 3600, JSON.stringify(books));
+        // Yeni kitap ekleme işleminden sonra cache güncellemesi yap
+        // Cache'e kitapları ekle
+        await redis.setex(cacheKey, 3600, JSON.stringify(books));
         console.debug(`Books cached successfully for ${cacheKey}.`);
+
+        res.status(HTTPStatusCode.Ok).json(books);
 
         // Başarılı işlem log'u
         await addLog({
@@ -70,6 +77,7 @@ exports.getAllBooks = async (req, res, next) => {
     }
 };
 
+*/
 
 
 exports.getBookById = async (req, res, next) => {
@@ -118,6 +126,11 @@ exports.getBookById = async (req, res, next) => {
     }
 };
 
+// Önce yardımcı bir fonksiyon oluşturalım
+const getDefaultCacheKey = (page = 1, limit = 100, sortBy = 'createdAt', sortOrder = 'DESC') => {
+    return `allBooks:page=${page}:limit=${limit}:sortBy=${sortBy}:sortOrder=${sortOrder}`;
+};
+
 exports.createBook = async (req, res, next) => {
     const { title, author } = req.body;
     if (!title || !author) {
@@ -125,20 +138,41 @@ exports.createBook = async (req, res, next) => {
     }
 
     try {
-        // Sequelize ile yeni kitap oluştur
         const book = await Book.create(req.body);
+
+        // Önce tekil kitap cache'ini güncelle
+        const bookCacheKey = `book:${book.id}`;
+        await redis.setex(bookCacheKey, 3600, JSON.stringify(book));
+
+        // Ana liste cache'lerini güncelle
+        const defaultCacheKey = getDefaultCacheKey();
+        const cachedData = await redis.get(defaultCacheKey);
+        
+        if (cachedData) {
+            const books = JSON.parse(cachedData);
+            books.unshift(book);
+            
+            if (books.length > 100) {
+                books.pop();
+            }
+            
+            await redis.setex(defaultCacheKey, 3600, JSON.stringify(books));
+            console.log(`Default cache güncellendi, yeni kitap eklendi: ${book.id}`);
+        } else {
+            // Cache yoksa, veritabanından tüm kitapları çek
+            const allBooks = await Book.findAll({
+                limit: 100,
+                order: [['createdAt', 'DESC']]
+            });
+            await redis.setex(defaultCacheKey, 3600, JSON.stringify(allBooks));
+            console.log(`Yeni cache oluşturuldu, tüm kitaplar eklendi`);
+        }
+
         res.status(HTTPStatusCode.Created).json(book);
 
-        // Cache temizleme
-        const allBooksCacheKey = 'allBooks';
-        await redis.del(allBooksCacheKey); // Tüm kitaplar cache’ini temizle
-
-        console.log(`Cache temizlendi: ${allBooksCacheKey}`);
-
-        // Başarılı işlem log’u
         await addLog({
             id: `createBook-${Date.now()}`,
-            message: `Book with ID ${book.id} created successfully and cache cleared`,
+            message: `Book with ID ${book.id} created successfully and cache updated`,
             level: 'info',
             timestamp: new Date().toISOString(),
         });
@@ -146,13 +180,51 @@ exports.createBook = async (req, res, next) => {
         console.error(error);
         next(new InternalServerErrorException(`Kitap oluşturma hatası: ${error.message}`));
 
-        // Hata log’u
         await addLog({
             id: `createBook-${Date.now()}`,
             message: `Error creating book: ${error.message}`,
             level: 'error',
             timestamp: new Date().toISOString(),
         });
+    }
+};
+
+exports.getAllBooks = async (req, res, next) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 100;
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder || 'DESC';
+
+        const cacheKey = getDefaultCacheKey(page, limit, sortBy, sortOrder);
+
+        const cachedBooks = await redis.get(cacheKey);
+        if (cachedBooks) {
+            console.log('Cache kullanıldı');
+            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks));
+        }
+
+        console.log('Cache bulunamadı, veritabanından alınıyor...');
+
+        const books = await Book.findAll({
+            limit: limit,
+            offset: (page - 1) * limit,
+            order: [[sortBy, sortOrder]]
+        });
+
+        await redis.setex(cacheKey, 3600, JSON.stringify(books));
+
+        res.status(HTTPStatusCode.Ok).json(books);
+
+        await addLog({
+            id: `getAllBooks-${Date.now()}`,
+            message: `Books fetched successfully`,
+            level: 'info',
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error(error);
+        next(new InternalServerErrorException('Kitapları alma hatası', error.message));
     }
 };
 
@@ -170,30 +242,42 @@ exports.updateBook = async (req, res, next) => {
         const updatedBook = await Book.findByPk(id);
         res.status(HTTPStatusCode.Ok).json(updatedBook);
 
-        // Cache’i temizle ve güncelle
+        // Kitap cache'ini kontrol et ve güncelle
         const bookCacheKey = `book:${id}`;
-        await redis.del(bookCacheKey); // Güncellenen kitap için cache’i sil
+        const cachedBook = await redis.get(bookCacheKey);
 
-        const allBooksCacheKey = 'allBooks';
-        await redis.del(allBooksCacheKey); // Tüm kitaplar cache’ini de sil
-
-        console.log(`Cache temizlendi: ${bookCacheKey}, ${allBooksCacheKey}`);
-
-        // Güncellenmiş veriyi cache’e ekle
-        redis.setex(bookCacheKey, 3600, JSON.stringify(updatedBook));
+        if (cachedBook) {
+            // Eğer kitap cache'de mevcutsa, üzerine yaz
+            await redis.setex(bookCacheKey, 3600, JSON.stringify(updatedBook)); // 1 saat boyunca geçerli
+            console.log(`Cache güncellendi: ${bookCacheKey}`);
+        } else {
+            // Eğer kitap cache'de yoksa, yeni cache ekle
+            await redis.setex(bookCacheKey, 3600, JSON.stringify(updatedBook)); // 1 saat boyunca geçerli
+            console.log(`Yeni kitap cache'e eklendi: ${bookCacheKey}`);
+        }
 
         // Başarılı işlem log’u
         await addLog({
             id: `updateBook-${Date.now()}`,
-            message: `Book with ID ${id} updated successfully`,
+            message: `Book with ID ${id} updated successfully and cache updated`,
             level: 'info',
             timestamp: new Date().toISOString(),
         });
     } catch (error) {
         console.error(error);
         next(new InternalServerErrorException(`Kitap güncelleme hatası: ${error.message}`));
+
+        // Hata log’u
+        await addLog({
+            id: `updateBook-${Date.now()}`,
+            message: `Error updating book with ID ${id}: ${error.message}`,
+            level: 'error',
+            timestamp: new Date().toISOString(),
+        });
     }
 };
+
+
 
 exports.deleteBook = async (req, res, next) => {
     const { id } = req.params;
@@ -254,14 +338,19 @@ exports.searchBooks = async (req, res) => {
 
 exports.filterBooks = async (req, res) => {
     try {
-        const { title, startDate, endDate } = req.query;
+        const { title, author, startDate, endDate } = req.query;
 
         // Filtreleme için kullanılacak kriterler
         const filterCriteria = {};
 
-        // Title parametresi varsa, sadece title'da filtreleme yap
+        // Title parametresi varsa, küçük/büyük harf duyarsız arama yap
         if (title) {
-            filterCriteria.title = { [Op.iLike]: `%${title}%` }; // Küçük/büyük harf duyarsız arama
+            filterCriteria.title = { [Op.iLike]: `%${title}%` };
+        }
+
+        // Author parametresi varsa, küçük/büyük harf duyarsız arama yap
+        if (author) {
+            filterCriteria.author = { [Op.iLike]: `%${author}%` };
         }
 
         // Filtreleme için tarih aralığı
