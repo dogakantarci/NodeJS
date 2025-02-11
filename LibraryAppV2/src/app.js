@@ -8,6 +8,7 @@ const authRoutes = require('./routes/authRoutes');
 const helmet = require('helmet');
 const { exec } = require('child_process'); // Komutları çalıştırmak için ekle
 const { errorHandler } = require('./middleware/errorHandler');
+const cors = require("cors");
 
 const app = express();
 
@@ -24,6 +25,7 @@ const syncDatabase = async () => {
   syncDatabase();
 
 app.use(morgan('combined'));  // 'combined' formatında loglama yapar
+app.use(cors()); // Tüm kaynaklara izin verir (Güvenlik için gelişmiş ayarlar yapacağız)
 
 // Helmet middleware'ini ekle
 app.use(helmet());

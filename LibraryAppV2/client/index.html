@@ -3,13 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kütüphane</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <title>Kütüphane Uygulaması</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        form { margin: 20px auto; width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+        input { width: 100%; padding: 10px; margin: 5px 0; }
+        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #218838; }
+        #logout-btn { background-color: #dc3545; }
+        #logout-btn:hover { background-color: #c82333; }
+        .hidden { display: none; }
+    </style>
 </head>
 <body>
-    <h1>Kütüphane Kitap Listesi</h1>
-    <ul id="book-list"></ul>
+
+    <h1>Kütüphane Uygulaması</h1>
+
+    <!-- 📌 Giriş Formu -->
+    <div id="login-container">
+        <h2>Giriş Yap</h2>
+        <form id="login-form">
+            <input type="text" id="login-username" placeholder="Kullanıcı Adı" required>
+            <input type="password" id="login-password" placeholder="Şifre" required>
+            <button type="submit">Giriş Yap</button>
+        </form>        
+        <p>Hesabın yok mu? <a href="#" id="show-register">Kayıt Ol</a></p>
+    </div>
+
+    <!-- 📌 Kayıt Formu -->
+    <div id="register-container" class="hidden">
+        <h2>Kayıt Ol</h2>
+        <form id="register-form">
+            <input type="text" id="register-username" placeholder="Kullanıcı Adı" required>
+            <input type="password" id="register-password" placeholder="Şifre" required>
+            <button type="submit">Kayıt Ol</button>
+        </form>
+        <p>Zaten hesabın var mı? <a href="#" id="show-login">Giriş Yap</a></p>
+    </div>
+
+    <!-- 📌 Kitap Listesi ve Çıkış Butonu -->
+    <div id="library-section" class="hidden">
+        <button id="logout-btn">Çıkış Yap</button>
+        <h2>Kitap Listesi</h2>
+        <ul id="book-list"></ul>
+
+        <h2>Yeni Kitap Ekle</h2>
+        <form id="book-form">
+            <input type="text" id="title" placeholder="Kitap Adı" required>
+            <input type="text" id="author" placeholder="Yazar Adı" required>
+            <button type="submit">Ekle</button>
+        </form>
+    </div>
 
     <script src="app.js"></script>
 </body>
