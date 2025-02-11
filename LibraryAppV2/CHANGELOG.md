@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/dogakantarci/NodeJS/compare/v1.1.0...v1.2.0) (2025-02-11)
+
+
+### Features
+
+* add nginx ([a9f2664](https://github.com/dogakantarci/NodeJS/commit/a9f2664747fce4d5045ad07117abeb6158957e7b))
+
 # [1.1.0](https://github.com/dogakantarci/NodeJS/compare/v1.0.0...v1.1.0) (2025-02-10)
 
 
