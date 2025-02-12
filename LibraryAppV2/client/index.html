@@ -5,14 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kütüphane Uygulaması</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        form { margin: 20px auto; width: 300px; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
-        input { width: 100%; padding: 10px; margin: 5px 0; }
-        button { padding: 10px 20px; background-color: #28a745; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #218838; }
-        #logout-btn { background-color: #dc3545; }
-        #logout-btn:hover { background-color: #c82333; }
-        .hidden { display: none; }
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+
+        form {
+            margin: 20px auto;
+            width: 300px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+
+        #logout-btn {
+            background-color: #dc3545;
+            padding: 8px 16px;
+            margin: 10px auto;
+            display: block;
+            font-size: 14px;
+        }
+
+        #logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .book-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .book-item button {
+            margin-left: 10px;
+        }
+
+        .delete-btn, .update-btn {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        .update-btn {
+            background-color: #ffc107;
+            color: black;
+            border: none;
+            cursor: pointer;
+        }
+
+        .update-btn:hover {
+            background-color: #e0a800;
+        }
     </style>
 </head>
 <body>
@@ -45,13 +126,34 @@
     <div id="library-section" class="hidden">
         <button id="logout-btn">Çıkış Yap</button>
         <h2>Kitap Listesi</h2>
-        <ul id="book-list"></ul>
-
+        <ul id="book-list">
+            <!-- Kitaplar burada listelenecek -->
+            <li class="book-item">
+                <span>Kitap Adı - Yazar Adı</span>
+                <button class="update-btn" onclick="updateBook(1)">Düzenle</button>
+                <button class="delete-btn" onclick="deleteBook(1)">Sil</button>
+            </li>
+            <li class="book-item">
+                <span>Kitap Adı 2 - Yazar Adı 2</span>
+                <button class="update-btn" onclick="updateBook(2)">Düzenle</button>
+                <button class="delete-btn" onclick="deleteBook(2)">Sil</button>
+            </li>
+        </ul>
+        
         <h2>Yeni Kitap Ekle</h2>
         <form id="book-form">
             <input type="text" id="title" placeholder="Kitap Adı" required>
             <input type="text" id="author" placeholder="Yazar Adı" required>
             <button type="submit">Ekle</button>
+        </form>
+    </div>
+<!-- 📌 Kitap Düzenleme Formu -->
+    <div id="update-container" class="hidden">
+        <h2>Kitap Düzenle</h2>
+        <form id="update-form">
+            <input type="text" id="update-title" placeholder="Kitap Adı" required>
+            <input type="text" id="update-author" placeholder="Yazar Adı" required>
+            <button type="submit">Kaydet</button>
         </form>
     </div>
 
