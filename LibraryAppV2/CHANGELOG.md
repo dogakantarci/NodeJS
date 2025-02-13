@@ -1,3 +1,16 @@
+# [1.3.0](https://github.com/dogakantarci/NodeJS/compare/v1.2.0...v1.3.0) (2025-02-13)
+
+
+### Bug Fixes
+
+* sequelize instance var ([0e900c6](https://github.com/dogakantarci/NodeJS/commit/0e900c62a6de096f7b12d2601dd04b49341b5202))
+
+
+### Features
+
+* frontend add-update books ([e7a5a40](https://github.com/dogakantarci/NodeJS/commit/e7a5a40728e0ee428f4746a22172cd86c58b5a98))
+* frontend login page ([f486839](https://github.com/dogakantarci/NodeJS/commit/f486839aa803122090b30f80fcf504bce642989f))
+
 # [1.2.0](https://github.com/dogakantarci/NodeJS/compare/v1.1.0...v1.2.0) (2025-02-11)
 
 
