@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { sequelize } = require('../config/db');
-const User = require('../models/User')(sequelize); // Kullanıcı modelini ekleyin
+const User = require('../models/User'); // Kullanıcı modelini ekleyin
 
 // Hata mesajlarını düzenlemek için özel bir fonksiyon
 const handleTokenError = (error, res) => {

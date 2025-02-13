@@ -1,6 +1,5 @@
 // src/services/authService.js
-const { sequelize } = require('../config/db');  // Sequelize instance'ını doğru içe aktarın
-const User = require('../models/User')(sequelize); 
+const User = require('../models/User'); 
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 

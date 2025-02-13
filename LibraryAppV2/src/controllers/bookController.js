@@ -1,5 +1,4 @@
-const { sequelize } = require('../config/db'); // Sequelize instance'ını doğru içe aktarın
-const Book = require('../models/Book')(sequelize); // sequelize instance'ı ile çağırılmalı
+const Book = require('../models/Book');
 const { addLog } = require('../services/elasticsearchService');
 //const { search } = require('../services/elasticsearchService');
 const { InternalServerErrorException, BadRequestException, NotFoundException } = require('../exceptions/HttpException');
