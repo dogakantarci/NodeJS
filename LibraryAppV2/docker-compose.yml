@@ -1,37 +1,58 @@
 version: '3'
 services:
-  my-app:
+  # my-app servisini iki örnek olarak çalıştırıyoruz
+  my-app-1:
     build: .
     ports:
-      - "3000:3000"
+      - "3000:3000"  # Bu konteyner dışarıya 3001 portu üzerinden erişilecek
     depends_on:
       - my-redis
       - my-elasticsearch
-      - my-postgres  # PostgreSQL servisini burada ekliyoruz
+      - my-postgres
     environment:
       REDIS_HOST: my-redis
       ES_HOST: my-elasticsearch
-      DB_HOST: my-postgres  # PostgreSQL bağlantısı için ortam değişkeni
+      DB_HOST: my-postgres
       DB_USER: myuser
       DB_PASSWORD: mypassword
       DB_NAME: mydb
     networks:
-      - app-network  # Ağı belirtin
+      - app-network
     dns:
       - 8.8.8.8  # Google DNS
+
+  my-app-2:
+    build: .
+    ports:
+      - "3002:3000"  # Bu konteyner dışarıya 3002 portu üzerinden erişilecek
+    depends_on:
+      - my-redis
+      - my-elasticsearch
+      - my-postgres
+    environment:
+      REDIS_HOST: my-redis
+      ES_HOST: my-elasticsearch
+      DB_HOST: my-postgres
+      DB_USER: myuser
+      DB_PASSWORD: mypassword
+      DB_NAME: mydb
+    networks:
+      - app-network
+    dns:
+      - 8.8.8.8  # Google DNS
+
   client:
     build: ./client
     container_name: client-app
     networks:
       - app-network
 
-
   my-redis:
     image: redis:latest
     ports:
       - "6379:6379"
     networks:
-      - app-network  # Ağı belirtin
+      - app-network
 
   my-elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.10.0
@@ -40,9 +61,9 @@ services:
     ports:
       - "9200:9200"
     networks:
-      - app-network  # Ağı belirtin
+      - app-network
 
-  my-postgres:  # PostgreSQL servisini ekliyoruz
+  my-postgres:
     image: postgres:latest
     container_name: my-postgres
     environment:
@@ -52,27 +73,27 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - app-network  # Ağı belirtin
+      - app-network
     volumes:
-      - pgdata:/var/lib/postgresql/data  # Verilerin kalıcı olması için volume kullanıyoruz
+      - pgdata:/var/lib/postgresql/data
 
   web:
     image: nginx
     container_name: nginx-proxy
     volumes:
       - ./client:/usr/share/nginx/html  # client dizinini Nginx'in html dizinine bağlama
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf  # Nginx konfigürasyon dosyasını bağlama
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf  # Nginx konfigürasyon dosyasını bağlama
     ports:
-      - "8080:80"
+      - "8080:80"  # Nginx'in dışarıya 80 portu üzerinden hizmet verecek
     depends_on:
-      - my-app
+      - my-app-1
+      - my-app-2
     networks:
       - app-network
 
-
 networks:
-  app-network:  # Ağı burada tanımlayın
+  app-network:
     driver: bridge
 
 volumes:
-  pgdata:  # PostgreSQL verilerini kalıcı hale getirecek volume
+  pgdata:
