@@ -1,4 +1,16 @@
 document.addEventListener("DOMContentLoaded", function () {
+
+    function decodeJWT(token) {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload;
+    }
+
+    function isTokenExpired(token) {
+        const decoded = decodeJWT(token);
+        const currentTime = Math.floor(Date.now() / 1000); // UNIX timestamp
+        return decoded.exp < currentTime;
+    }
+
     const loginContainer = document.getElementById("login-container");
     const registerContainer = document.getElementById("register-container");
     const librarySection = document.getElementById("library-section");
@@ -27,7 +39,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const token = localStorage.getItem("token");
     if (token) {
-        showLibrary();
+        if (isTokenExpired(token)) {
+            alert("Token süresi dolmuş. Lütfen yeniden giriş yapın.");
+            localStorage.removeItem("token");
+            location.reload();
+        } else {
+            showLibrary();
+        }
     }
 
     document.getElementById("register-form").addEventListener("submit", async function (event) {
