@@ -6,71 +6,112 @@ const { HTTPStatusCode } = require('../utils/HttpStatusCode');
 const redis = require('../redisClient');
 const { Op } = require('sequelize');
 
-// Önce yardımcı bir fonksiyon oluşturalım
-const getDefaultCacheKey = (page = 1, limit = 100, sortBy = 'createdAt', sortOrder = 'DESC') => {
-    return `allBooks:page=${page}:limit=${limit}:sortBy=${sortBy}:sortOrder=${sortOrder}`;
+
+// Yardımcı fonksiyon: dinamik cache key oluşturur
+const getDefaultCacheKey = (page = 1, limit = 100, sortBy = 'createdAt', sortOrder = 'DESC', filters = {}) => {
+    let filterKey = Object.entries(filters)
+        .filter(([_, value]) => value)
+        .map(([key, value]) => `${key}=${value}`)
+        .join(':');
+
+    return `allBooks:page=${page}:limit=${limit}:sortBy=${sortBy}:sortOrder=${sortOrder}:${filterKey}`;
 };
+
+
 
 exports.getAllBooks = async (req, res, next) => {
     try {
-        // Sayfalama parametrelerini al
-        const page = parseInt(req.query.page) || 1;  // Varsayılan sayfa 1 olacak
-        let limit = parseInt(req.query.limit) || 100; // Varsayılan limit 100 olacak
+        // Sayfalama ve sıralama parametreleri
+        const page = parseInt(req.query.page) || 1;
+        let limit = parseInt(req.query.limit) || 100;
+        const sortBy = req.query.sortBy || 'createdAt';
+        const sortOrder = req.query.sortOrder || 'DESC';
 
-        // Limitin aşırı büyük olmasını engelle
-        const MAX_LIMIT = 100; // Maksimum alınabilecek veri sayısı
+        // Limit sınırı
+        const MAX_LIMIT = 100;
         if (limit > MAX_LIMIT) {
             return next(new BadRequestException(`Limit en fazla ${MAX_LIMIT} olabilir.`));
         }
 
-        const offset = (page - 1) * limit; // Sayfa başına kaç veri alacağımızı hesapla
-        const sortBy = req.query.sortBy || 'createdAt'; // Varsayılan sıralama alanı
-        const sortOrder = req.query.sortOrder || 'DESC'; // Varsayılan sıralama türü (DESC)
+        const offset = (page - 1) * limit;
 
-        // Cache anahtarını oluştur
-        const cacheKey = getDefaultCacheKey(page, limit, sortBy, sortOrder);
+        // Filtreleme
+        const { q, title, author, genre, startDate, endDate } = req.query;
+        const where = {};
 
-        // Redis cache kontrolü
-        const cachedBooks = await redis.get(cacheKey);
-        if (cachedBooks) {
-            console.log('Cache kullanıldı');
-            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks));
+        if (q) {
+            where[Op.or] = [
+                { title: { [Op.iLike]: `%${q}%` } },
+                { author: { [Op.iLike]: `%${q}%` } },
+            ];
         }
 
-        console.log('Cache bulunamadı, veritabanından alınıyor...');
+        if (title) where.title = { [Op.iLike]: `%${title}%` };
+        if (author) where.author = { [Op.iLike]: `%${author}%` };
+        if (genre) where.genre = { [Op.iLike]: `%${genre}%` };
+        if (startDate && endDate) {
+            where.createdAt = {
+                [Op.between]: [new Date(startDate), new Date(endDate)],
+            };
+        }
 
-        // Sequelize ile kitapları al
-        const books = await Book.findAll({
-            limit: limit,
-            offset: offset,
-            order: [[sortBy, sortOrder]]
+        const filters = { q, title, author, genre, startDate, endDate };
+        const cacheKey = getDefaultCacheKey(page, limit, sortBy, sortOrder, filters);
+
+        const skipCache = req.query._nocache !== undefined;
+
+        if (!skipCache) {
+            const cachedBooks = await redis.get(cacheKey);
+            if (cachedBooks) {
+                console.log('📦 Cache kullanıldı');
+                return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBooks));
+            }
+            console.log('📡 Cache bulunamadı, veritabanından alınıyor...');
+        } else {
+            console.log('🚫 Cache bypass edildi (_nocache ile)');
+        }
+
+        // Veritabanından kitapları çek
+        const { count, rows } = await Book.findAndCountAll({
+            where,
+            limit,
+            offset,
+            order: [[sortBy, sortOrder]],
         });
 
-        // Cache'e kitapları ekle
-        await redis.setex(cacheKey, 3600, JSON.stringify(books));
+        const totalPages = Math.ceil(count / limit);
 
-        // Başarılı işlem log'u
-        console.log(`Fetched ${books.length} books from database.`);
+        const responseData = {
+            page,
+            limit,
+            totalPages,
+            totalBooks: count,
+            books: rows
+        };
 
-        res.status(HTTPStatusCode.Ok).json(books);
+        // Yeni cache yaz
+        await redis.setex(cacheKey, 3600, JSON.stringify(responseData));
 
-        // Log kaydı ekle
+        // Yanıtı gönder
+        res.status(HTTPStatusCode.Ok).json(responseData);
+
+        // Log
         await addLog({
             id: `getAllBooks-${Date.now()}`,
             message: `Books fetched successfully for page=${page}, limit=${limit}, sortBy=${sortBy}, sortOrder=${sortOrder}`,
             level: 'info',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
+
     } catch (error) {
         console.error(error);
         next(new InternalServerErrorException('Kitapları alma hatası', error.message));
 
-        // Hata log'u
         await addLog({
             id: `getAllBooks-${Date.now()}`,
             message: `Error fetching books: ${error.message}`,
             level: 'error',
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         });
     }
 };
@@ -81,14 +122,20 @@ exports.getBookById = async (req, res, next) => {
     try {
         const cacheKey = `book:${id}`;
 
-        // Redis cache kontrolü
-        const cachedBook = await redis.get(cacheKey);
-        if (cachedBook) {
-            console.log('Cache kullanıldı');
-            return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBook)); 
-        }
+        // Redis cache kontrolü — _nocache parametresi geldiyse bypass et
+        const skipCache = req.query._nocache !== undefined;
 
-        console.log('Cache bulunamadı, veritabanından alınıyor...');
+        if (!skipCache) {
+            const cachedBook = await redis.get(cacheKey);
+            if (cachedBook) {
+                console.log('📦 Cache kullanıldı');
+                return res.status(HTTPStatusCode.Ok).json(JSON.parse(cachedBook));
+            }
+
+            console.log('🕵️ Cache bulunamadı, veritabanından alınıyor...');
+        } else {
+            console.log('🚫 Cache bypass edildi, doğrudan veritabanından alınıyor...');
+        }
         
         // Sequelize ile kitap verisini al
         const book = await Book.findByPk(id); // Sequelize methodu
@@ -124,45 +171,45 @@ exports.getBookById = async (req, res, next) => {
 exports.createBook = async (req, res, next) => {
     const { title, author } = req.body;
     if (!title || !author) {
-        return next(new BadRequestException('Tüm alanlar gereklidir: title, author, publishedDate'));
+        return next(new BadRequestException('Tüm alanlar gereklidir: title, author'));
     }
 
     try {
+        // Yeni kitabı veritabanına ekle
         const book = await Book.create(req.body);
 
-        // Önce tekil kitap cache'ini güncelle
-        const bookCacheKey = `book:${book.id}`;
-        await redis.setex(bookCacheKey, 3600, JSON.stringify(book));
-
-        // Ana liste cache'lerini güncelle
-        const defaultCacheKey = getDefaultCacheKey();
-        const cachedData = await redis.get(defaultCacheKey);
-        
-        if (cachedData) {
-            const books = JSON.parse(cachedData);
-            books.unshift(book);
-            
-            if (books.length > 100) {
-                books.pop();
-            }
-            
-            await redis.setex(defaultCacheKey, 3600, JSON.stringify(books));
-            console.log(`Default cache güncellendi, yeni kitap eklendi: ${book.id}`);
-        } else {
-            // Cache yoksa, veritabanından tüm kitapları çek
-            const allBooks = await Book.findAll({
-                limit: 100,
-                order: [['createdAt', 'DESC']]
-            });
-            await redis.setex(defaultCacheKey, 3600, JSON.stringify(allBooks));
-            console.log(`Yeni cache oluşturuldu, tüm kitaplar eklendi`);
+        // Tüm kitap listesi cache'lerini sil
+        const keys = await redis.keys('allBooks*');
+        if (keys.length > 0) {
+            await redis.del(...keys);
+            console.log('Cache\'ten tüm kitap listesi varyasyonları silindi.');
         }
 
-        res.status(HTTPStatusCode.Created).json(book);
+        // Direkt olarak veritabanından en güncel kitapları al
+        // BU KISIMDA DEĞİŞİKLİK: Cache kullanımını atlayarak DB'den çek
+        const { count, rows } = await Book.findAndCountAll({
+            where: {},
+            limit: 100,  // Burada 100 limitini sabit kullanıyoruz ancak frontend'den gelen limiti kullanabilirsiniz
+            offset: 0,
+            order: [['createdAt', 'DESC']],
+        });
 
+        const totalPages = Math.ceil(count / 100);
+        
+        // Cache kullanımını engelle - bypass_cache flag'i ekle
+        res.status(HTTPStatusCode.Created).json({
+            page: 1,
+            limit: 100,
+            totalPages,
+            totalBooks: count,
+            books: rows,
+            bypass_cache: true // Frontend bunu kullanabilir
+        });
+
+        // Log kaydı
         await addLog({
             id: `createBook-${Date.now()}`,
-            message: `Book with ID ${book.id} created successfully and cache updated`,
+            message: `Book with ID ${book.id} created successfully and cache cleared`,
             level: 'info',
             timestamp: new Date().toISOString(),
         });
@@ -229,6 +276,10 @@ exports.updateBook = async (req, res, next) => {
                 limit: 100,
                 order: [['createdAt', 'DESC']]
             });
+            res.status(HTTPStatusCode.Created).json({
+                message: "Kitap başarıyla eklendi",
+                books: allBooks // Güncellenmiş kitap listesi
+            });
             await redis.setex(defaultCacheKey, 3600, JSON.stringify(allBooks));
             console.log(`Tüm kitaplar için cache oluşturuldu.`);
         }
@@ -277,24 +328,17 @@ exports.deleteBook = async (req, res, next) => {
 
         console.log("Silinen kitap ID'si:", id);
 
-        // Cache temizleme: Kitapla ilgili cache'i sil
+        // Kitaba ait bireysel cache’i sil
         await redis.del(`book:${id}`);
         console.log(`Cache'ten silinen kitap ID'si: book:${id}`);
 
-        // Kitaplar listesi cache'ini güncelleme: Tüm kitaplar cache'ini sil
-        await redis.del('allBooks');
-        console.log('Cache\'ten tüm kitaplar listesi silindi.');
-
-        // Yeni cache oluştur: Kitaplar listesini yeniden çek ve cache'e ekle
-        const books = await Book.findAll({
-            limit: 100,
-            order: [['createdAt', 'DESC']]
-        });
-        const defaultCacheKey = getDefaultCacheKey();
-        await redis.setex(defaultCacheKey, 3600, JSON.stringify(books));
-        console.log('Kitaplar listesi cache\'i güncellendi.');
-
-        res.status(HTTPStatusCode.NoContent).json({ message: 'Kitap silindi' });
+        // Tüm kitap listesi ile ilgili tüm cache key'lerini sil
+        const keys = await redis.keys('allBooks*');
+        if (keys.length > 0) {
+            await redis.del(...keys);
+            console.log('Cache\'ten tüm kitap listesi varyasyonları silindi.');
+        }
+        res.status(HTTPStatusCode.Ok).json({ message: 'Kitap silindi' });
 
         // Log kaydı
         await addLog({
@@ -309,8 +353,6 @@ exports.deleteBook = async (req, res, next) => {
         next(new InternalServerErrorException(`Kitap silme hatası: ${error.message}`));
     }
 };
-
-
 
 
 exports.searchBooks = async (req, res) => {

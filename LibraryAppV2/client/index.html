@@ -4,164 +4,128 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kütüphane Uygulaması</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-        }
-
-        form {
-            margin: 20px auto;
-            width: 300px;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-        }
-
-        button {
-            padding: 8px 16px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            margin-top: 10px;
-        }
-
-        button:hover {
-            background-color: #218838;
-        }
-
-        #logout-btn {
-            background-color: #dc3545;
-            padding: 8px 16px;
-            margin: 10px auto;
-            display: block;
-            font-size: 14px;
-        }
-
-        #logout-btn:hover {
-            background-color: #c82333;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .book-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 10px 0;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-
-        .book-item button {
-            margin-left: 10px;
-        }
-
-        .delete-btn, .update-btn {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-
-        .delete-btn:hover {
-            background-color: #c82333;
-        }
-
-        .update-btn {
-            background-color: #218838; 
-            color: black;
-            border: none;
-            cursor: pointer;
-            font-size: 12px;
-            padding: 5px 10px;
-            border-radius: 5px;
-            transition: background-color 0.3s ease;
-        }
-
-        .update-btn:hover {
-            background-color: #218838; /* Hover efekti için daha koyu sarı */
-}
-
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="font-sans bg-gray-100 text-center">
 
-    <h1>Kütüphane Uygulaması</h1>
+    <h1 class="text-3xl font-semibold my-6">Kütüphane Uygulaması</h1>
 
     <!-- 📌 Giriş Formu -->
-    <div id="login-container">
-        <h2>Giriş Yap</h2>
+    <div id="login-container" class="mx-auto max-w-md p-4 bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Giriş Yap</h2>
         <form id="login-form">
-            <input type="text" id="login-username" placeholder="Kullanıcı Adı" required>
-            <input type="password" id="login-password" placeholder="Şifre" required>
-            <button type="submit">Giriş Yap</button>
+            <input type="text" id="login-username" placeholder="Kullanıcı Adı" required class="w-full p-2 mb-4 border border-gray-300 rounded-md">
+            <input type="password" id="login-password" placeholder="Şifre" required class="w-full p-2 mb-4 border border-gray-300 rounded-md">
+            <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">Giriş Yap</button>
         </form>        
-        <p>Hesabın yok mu? <a href="#" id="show-register">Kayıt Ol</a></p>
+        <p class="mt-4">Hesabın yok mu? <a href="#" id="show-register" class="text-blue-500 hover:underline">Kayıt Ol</a></p>
     </div>
 
     <!-- 📌 Kayıt Formu -->
-    <div id="register-container" class="hidden">
-        <h2>Kayıt Ol</h2>
+    <div id="register-container" class="hidden mx-auto max-w-md p-4 bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Kayıt Ol</h2>
         <form id="register-form">
-            <input type="text" id="register-username" placeholder="Kullanıcı Adı" required>
-            <input type="password" id="register-password" placeholder="Şifre" required>
-            <button type="submit">Kayıt Ol</button>
+            <input type="text" id="register-username" placeholder="Kullanıcı Adı" required class="w-full p-2 mb-4 border border-gray-300 rounded-md">
+            <input type="password" id="register-password" placeholder="Şifre" required class="w-full p-2 mb-4 border border-gray-300 rounded-md">
+            <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Kayıt Ol</button>
         </form>
-        <p>Zaten hesabın var mı? <a href="#" id="show-login">Giriş Yap</a></p>
+        <p class="mt-4">Zaten hesabın var mı? <a href="#" id="show-login" class="text-blue-500 hover:underline">Giriş Yap</a></p>
     </div>
 
-    <!-- 📌 Kitap Listesi ve Çıkış Butonu -->
-    <div id="library-section" class="hidden">
-        <button id="logout-btn">Çıkış Yap</button>
-        <h2>Kitap Listesi</h2>
-        <ul id="book-list">
-            <!-- Kitaplar burada listelenecek -->
-            <li class="book-item">
-                <span>Kitap Adı - Yazar Adı</span>
-                <button class="update-btn" onclick="updateBook(1)">Düzenle</button>
-                <button class="delete-btn" onclick="deleteBook(1)">Sil</button>
-            </li>
-            <li class="book-item">
-                <span>Kitap Adı 2 - Yazar Adı 2</span>
-                <button class="update-btn" onclick="updateBook(2)">Düzenle</button>
-                <button class="delete-btn" onclick="deleteBook(2)">Sil</button>
-            </li>
+    <!-- Kitap Listesi ve Çıkış Butonu -->
+    <div id="library-section" class="hidden mx-auto max-w-4xl p-4">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold">Kütüphane</h2>
+            <button id="logout-btn" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">Çıkış Yap</button>
+        </div>
+
+        <!-- Arama ve Filtreleme Paneli -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+            <!-- Arama -->
+            <div class="mb-4">
+                <h3 class="text-lg font-medium mb-2">Kitap Ara</h3>
+                <div class="flex">
+                    <input type="text" id="search-input" placeholder="Kitap adı veya yazar" class="flex-1 p-2 border border-gray-300 rounded-l-md">
+                    <button id="search-btn" class="bg-blue-500 text-white py-2 px-4 rounded-r-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Ara</button>
+                </div>
+            </div>
+
+            <!-- Detaylı Filtreleme -->
+            <div>
+                <h3 class="text-lg font-medium mb-2">Detaylı Filtreleme</h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" id="filter-title" placeholder="Kitap Adı" class="p-2 border border-gray-300 rounded-md">
+                    <input type="text" id="filter-author" placeholder="Yazar Adı" class="p-2 border border-gray-300 rounded-md">
+                    <input type="date" id="filter-start-date" class="p-2 border border-gray-300 rounded-md">
+                    <input type="date" id="filter-end-date" class="p-2 border border-gray-300 rounded-md">
+                </div>
+                <div class="mt-2 flex justify-end">
+                    <button id="filter-clear-btn" class="bg-gray-300 text-gray-800 py-1 px-3 rounded-md mr-2 hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400">Temizle</button>
+                    <button id="filter-apply-btn" class="bg-green-500 text-white py-1 px-3 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">Uygula</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sıralama ve Sayfalama Kontrolü -->
+        <div class="bg-white p-4 rounded-lg shadow-md mb-6 flex flex-wrap justify-between items-center">
+            <div class="flex items-center mb-2 sm:mb-0">
+                <span class="mr-2">Sırala:</span>
+                <select id="sort-by" class="p-2 border border-gray-300 rounded-md mr-2">
+                    <option value="createdAt">Oluşturma Tarihi</option>
+                    <option value="title">Kitap Adı</option>
+                    <option value="author">Yazar</option>
+                </select>
+                <select id="sort-order" class="p-2 border border-gray-300 rounded-md">
+                    <option value="DESC">Azalan</option>
+                    <option value="ASC">Artan</option>
+                </select>
+            </div>
+            <div class="flex items-center">
+                <select id="page-limit" class="p-2 border border-gray-300 rounded-md mr-2">
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                </select>
+                <span class="mr-2">/ sayfa</span>
+            </div>
+        </div>
+
+        <!-- Kitap Listesi -->
+        <h2 class="text-2xl font-semibold mt-6 mb-4">Kitap Listesi</h2>
+        <ul id="book-list" class="space-y-4 mb-6">
+            <!-- Kitaplar JavaScript ile buraya eklenecek -->
         </ul>
+
+        <!-- Sayfalama Navigasyonu -->
+        <div class="flex justify-center items-center space-x-2 mb-6">
+            <button id="prev-page" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400">&laquo; Önceki</button>
+            <span id="page-info" class="px-4">Sayfa <span id="current-page">1</span> / <span id="total-pages">1</span></span>
+            <button id="next-page" class="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400">Sonraki &raquo;</button>
+        </div>
         
-        <h2>Yeni Kitap Ekle</h2>
-        <form id="book-form">
-            <input type="text" id="title" placeholder="Kitap Adı" required>
-            <input type="text" id="author" placeholder="Yazar Adı" required>
-            <button type="submit">Ekle</button>
-        </form>
+        <!-- Yeni Kitap Ekleme Formu -->
+        <div class="bg-white p-4 rounded-lg shadow-md">
+            <h2 class="text-2xl font-semibold mb-4">Yeni Kitap Ekle</h2>
+            <form id="book-form" class="space-y-4">
+                <input type="text" id="title" placeholder="Kitap Adı" required class="w-full p-2 border border-gray-300 rounded-md">
+                <input type="text" id="author" placeholder="Yazar Adı" required class="w-full p-2 border border-gray-300 rounded-md">
+                <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">Ekle</button>
+            </form>
+        </div>
     </div>
-<!-- 📌 Kitap Düzenleme Formu -->
-    <div id="update-container" class="hidden">
-        <h2>Kitap Düzenle</h2>
+
+    <!-- 📌 Kitap Düzenleme Formu -->
+    <div id="update-container" class="hidden mx-auto max-w-md p-4 bg-white rounded-lg shadow-md">
+        <h2 class="text-2xl font-semibold mb-4">Kitap Düzenle</h2>
         <form id="update-form">
-            <input type="text" id="update-title" placeholder="Kitap Adı" required>
-            <input type="text" id="update-author" placeholder="Yazar Adı" required>
-            <button type="submit">Kaydet</button>
+            <input type="text" id="update-title" placeholder="Kitap Adı" required class="w-full p-2 mb-4 border border-gray-300 rounded-md">
+            <input type="text" id="update-author" placeholder="Yazar Adı" required class="w-full p-2 mb-4 border border-gray-300 rounded-md">
+            <button type="submit" class="w-full bg-green-500 text-white py-2 rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500">Kaydet</button>
         </form>
     </div>
 
+    <!-- JavaScript Dosyasını Bağlama -->
     <script src="app.js"></script>
 </body>
 </html>

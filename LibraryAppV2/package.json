@@ -64,6 +64,7 @@
     "semantic-release": "^24.2.2",
     "sequelize-cli": "^6.6.2",
     "sinon": "^19.0.2",
-    "supertest": "^7.0.0"
+    "supertest": "^7.0.0",
+    "tailwindcss": "^4.1.3"
   }
 }
