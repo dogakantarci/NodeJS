@@ -4,7 +4,7 @@ services:
   my-app-1:
     build: .
     ports:
-      - "3000:3000"  # Bu konteyner dışarıya 3001 portu üzerinden erişilecek
+      - "3000:3000"  # Bu konteyner dışarıya 3000 portu üzerinden erişilecek
     depends_on:
       - my-redis
       - my-elasticsearch
