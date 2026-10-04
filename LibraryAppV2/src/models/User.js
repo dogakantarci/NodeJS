@@ -14,7 +14,7 @@ User.init(
     username: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true, // unique zaten index oluşturur
       validate: {
         notEmpty: true,
       },
@@ -28,12 +28,19 @@ User.init(
     },
   },
   {
-    sequelize, // Sequelize instance doğrudan kullanılıyor
+    sequelize,
     modelName: 'User',
-    timestamps: true, // createdAt ve updatedAt alanları otomatik eklenir
+    timestamps: true,
+
+    indexes: [
+      {
+        name: 'idx_users_username',
+        fields: ['username'],
+      },
+    ],
+
     hooks: {
       async beforeSave(user) {
-        // Eğer password değiştiyse, hash'leme işlemi yapılır
         if (user.changed('password')) {
           const salt = await bcrypt.genSalt(10);
           user.password = await bcrypt.hash(user.password, salt);
@@ -42,5 +49,6 @@ User.init(
     },
   }
 );
+
 
 module.exports = User; // Model doğrudan export ediliyor

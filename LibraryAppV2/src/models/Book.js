@@ -35,7 +35,7 @@ Book.init(
     title: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true,
+      unique: true, // Bu zaten otomatik olarak index oluşturur
     },
     author: {
       type: DataTypes.STRING,
@@ -51,11 +51,30 @@ Book.init(
     },
   },
   {
-    sequelize, // Sequelize instance doğrudan kullanılıyor
+    sequelize,
     modelName: 'Book',
     timestamps: true,
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
+
+    indexes: [
+      {
+        name: 'idx_books_title',
+        fields: ['title'],
+      },
+      {
+        name: 'idx_books_author',
+        fields: ['author'],
+      },
+      {
+        name: 'idx_books_createdAt',
+        fields: ['createdAt'],
+      },
+      {
+        name: 'idx_books_genre',
+        fields: ['genre'],
+      },
+    ],
   }
 );
 

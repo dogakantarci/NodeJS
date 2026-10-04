@@ -175,7 +175,7 @@ exports.createBook = async (req, res, next) => {
         return next(new BadRequestException('Tüm alanlar gereklidir: title, author'));
     }
 
-    const transaction = await sequelize.transaction(); // 🔁 transaction başlat
+    const transaction = await sequelize.transaction();
 
     try {
         const book = await Book.create(req.body, { transaction });
